@@ -28,10 +28,10 @@ class Test(unittest.TestCase):
                                         carbo='5'))
         c = condition
         test = next(get_ingredients(c('id', '=', add.id)), None)
-        self.assertEquals(test.id, add.id)
+        self.assertEqual(test.id, add.id)
 
-        self.assertEquals(test.calories, 1)
-        self.assertEquals(test.sugar, 2)
-        self.assertEquals(test.veg_protein, 3)
-        self.assertEquals(test.protein, 4)
-        self.assertEquals(test.carbo, 5)
+        self.assertEqual(test.calories, 1)
+        self.assertEqual(test.sugar, 2)
+        self.assertEqual(test.veg_protein, 3)
+        self.assertEqual(test.protein, 4)
+        self.assertEqual(test.carbo, 5)

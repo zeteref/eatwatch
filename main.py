@@ -27,9 +27,7 @@ class MealIngredientSchema(Schema):
     quantity = fields.Float()
 
 
-condition = namedtuple('condition', ('op', 'val'))
-def get_conditions(obj):
-    return [x for x in obj._asdict() if isinstance(x, condition)]
+condition = namedtuple('condition', ('lval', 'op', 'rval'))
 
 
 Ingredient = namedtuple('Ingredient', IngredientSchema._declared_fields.keys())
@@ -156,45 +154,45 @@ def add_object(obj, Schema):
     return obj._replace(id=c.lastrowid)
 
 
-def get_object(obj, Schema):
+def get_objects(Schema, *args):
     sql = select_sql(Schema, ignore=[])
 
-    conditions = []
-    for cond in get_conditions(obj):
-        conditions.append('AND {} {} {}'.format(cond.lval, cond.op, cond.rval))
+    conditions = [x for x in args if isinstance(x, condition)]
+    sql = [sql]
 
-    sql = '\n'.join([sql] + conditions)
+    for cond in conditions:
+        sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
 
-
+    sql = '\n'.join(sql)
     with sqliteconn() as con:
         c = con.cursor()
-        c.execute(select_sql(Schema, ignore=[]))
+        c.execute(sql, [x.rval for x in conditions])
 
-        return [Ingredient._make(o) for o in c.fetchall()]
+        return (Ingredient._make(o) for o in c.fetchall())
 
 
 def add_ingredient(ingredient):
     return add_object(ingredient, IngredientSchema)
 
 
-def get_ingredient(ingredient=None):
-    return get_object(ingredient, IngredientSchema)
+def get_ingredients(*args):
+    return get_objects(IngredientSchema, *args)
 
 
 def add_meal(meal):
     return add_object(meal, MealSchema)
 
 
-def get_meal(meal=None):
-    return get_object(meal, MealSchema)
+def get_meals(meal=None):
+    return get_objects(meal, MealSchema)
 
 
 def add_meal_ingredient(meal_ingredient):
     return add_object(meal_ingredient, MealIngredientSchema)
 
 
-def get_meal_ingredient(meal_ingredient=None):
-    return get_object(meal_ingredient, MealIngredientSchema)
+def get_meal_ingredients(meal_ingredient=None):
+    return get_objects(meal_ingredient, MealIngredientSchema)
 
 
 def __main__():

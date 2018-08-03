@@ -4,7 +4,7 @@ import datetime
 
 sys.path.append('../')
 
-from main import *
+from backend import *
 
 class TestAddObjects(unittest.TestCase):
 

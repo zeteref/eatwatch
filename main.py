@@ -1,4 +1,5 @@
 import sys
+import re
 import sqlite3
 from datetime import datetime
 from marshmallow import Schema, fields, pprint
@@ -36,23 +37,26 @@ def ingredient(name=None, **kwds):
     return templ._replace(**kwds)
 
 
+Meal = namedtuple('Meal', MealSchema._declared_fields.keys())
 def meal(name, date=datetime.now()):
-    Meal = namedtuple('Meal', MealSchema._declared_fields.keys())
     return Meal(None, name, date)
 
 
-def meal_ingredient(name, meal_id, ingr_id, quantity): 
-    MealIngredient = namedtuple('MealIngredient', MealIngredientSchema._declared_fields.keys())
-    return MealIngredient(None, meal_id, ingr_id, quantity)
+MealIngredient = namedtuple('MealIngredient', MealIngredientSchema._declared_fields.keys())
+def meal_ingredient(meal_id, ingredient_id, quantity): 
+    return MealIngredient(None, meal_id, ingredient_id, quantity)
 
 
 def _table_name(name, cls):
-    return name if name is not None else cls.__name__.replace('Schema', '').lower()
+    name = name if name is not None else cls.__name__.replace('Schema', '')
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower() + 's'
 
 
 def prepare_stmt(cls, table_name=None, ignore=None):
     ignore = ignore if ignore is not None else ['id']
-    fields = [x for x in cls._declared_fields.keys() if x not in ignore]
+    fields = cls._fields if hasattr(cls, '_fields') else cls._declared_fields.keys()
+    fields = [x for x in fields if x not in ignore]
     name = _table_name(table_name, cls)
 
     return namedtuple('stmt_components', ('fields', 'table_name'))._make(
@@ -76,6 +80,11 @@ def insert_sql(cls, table_name=None, ignore=None):
            ', '.join('?' * len(prep.fields)))
 
 
+def delete_sql(cls, table_name=None, id_='id'):
+    table_name = _table_name(table_name, cls)
+    return 'DELETE FROM {} WHERE {} = ?'.format(table_name, id_)
+
+
 class sqliteconn():
 
     def __init__(self, fname='example.db'):
@@ -95,8 +104,8 @@ class sqliteconn():
 def drop_db(fname):
     statements = [
             """DROP TABLE meal_ingredients""",
-            """DROP TABLE ingredient""",
-            """DROP TABLE meal"""
+            """DROP TABLE ingredients""",
+            """DROP TABLE meals"""
     ]
 
     with sqliteconn(fname) as con:
@@ -111,7 +120,7 @@ def drop_db(fname):
 def create_db(fname):
     statements = [
             """
-                CREATE TABLE ingredient(
+                CREATE TABLE ingredients (
                     id INTEGER PRIMARY KEY,
                     name TEXT,
                     calories INTEGER NOT NULL,
@@ -122,18 +131,18 @@ def create_db(fname):
                 )
             """,
             """
-                CREATE TABLE meal(
+                CREATE TABLE meals (
                     id INTEGER PRIMARY KEY,
                     date TEXT NOT NULL,
                     name TEXT
                 )
             """,
             """
-                CREATE TABLE meal_ingredients(
+                CREATE TABLE meal_ingredients (
                     id INTEGER PRIMARY KEY,
                     ingredient_id INTEGER NOT NULL,
                     meal_id INTEGER NOT NULL,
-                    quantity INTEGER NOT NULL,
+                    quantity FLOAT NOT NULL,
                     FOREIGN KEY(meal_id) REFERENCES meal(id)
                     FOREIGN KEY(ingredient_id) REFERENCES ingredient(id)
                 )
@@ -146,16 +155,26 @@ def create_db(fname):
             c.execute(stmt)
 
 
-def add_object(obj, Schema):
+def add_object(obj, cls=None):
+    cls = obj.__class__ if cls is None else cls 
+
     with sqliteconn() as con:
         c = con.cursor()
-        c.execute(insert_sql(Schema), obj[1:])
+        c.execute(insert_sql(cls), obj[1:])
 
     return obj._replace(id=c.lastrowid)
 
 
-def get_objects(Schema, *args):
-    sql = select_sql(Schema, ignore=[])
+def delete_object(obj, cls=None):
+    cls = obj.__class__ if cls is None else cls 
+
+    with sqliteconn() as con:
+        c = con.cursor()
+        c.execute(delete_sql(cls), (obj.id,))
+
+
+def get_objects(cls, *args):
+    sql = select_sql(cls, ignore=[])
 
     conditions = [x for x in args if isinstance(x, condition)]
     sql = [sql]
@@ -168,31 +187,43 @@ def get_objects(Schema, *args):
         c = con.cursor()
         c.execute(sql, [x.rval for x in conditions])
 
-        return (Ingredient._make(o) for o in c.fetchall())
+        return (cls._make(o) for o in c.fetchall())
 
 
 def add_ingredient(ingredient):
-    return add_object(ingredient, IngredientSchema)
+    return add_object(ingredient)
+
+
+def delete_ingredient(ingredient):
+    return delete_object(ingredient)
 
 
 def get_ingredients(*args):
-    return get_objects(IngredientSchema, *args)
+    return get_objects(Ingredient, *args)
 
 
 def add_meal(meal):
-    return add_object(meal, MealSchema)
+    return add_object(meal)
 
 
-def get_meals(meal=None):
-    return get_objects(meal, MealSchema)
+def delete_meal(meal):
+    return delete_object(meal)
+
+
+def get_meals(*args):
+    return get_objects(Meal, *args)
 
 
 def add_meal_ingredient(meal_ingredient):
-    return add_object(meal_ingredient, MealIngredientSchema)
+    return add_object(meal_ingredient)
 
 
-def get_meal_ingredients(meal_ingredient=None):
-    return get_objects(meal_ingredient, MealIngredientSchema)
+def delete_meal_ingredient(meal_ingredient):
+    return delete_object(meal_ingredient)
+
+
+def get_meal_ingredients(*args):
+    return get_objects(MealIngredient, *args)
 
 
 def __main__():

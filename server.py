@@ -26,6 +26,7 @@ class NodesController(object):
         """
         return [{'name': name} for name in sample_nodes]
 
+
     @cherrypy.tools.json_out()
     def get(self, name):
         """
@@ -46,8 +47,7 @@ class NodesController(object):
         """
 
         request_data = cherrypy.request.json
-        data, errors = MealSchema(only=('name', 'date')).load(request_data)
-        import pdb; pdb.set_trace()
+        data, errors = backend.MealSchema(only=('name', 'date')).load(request_data)
 
         if errors:
             # Attempt to format errors dict from Marshmallow
@@ -58,8 +58,9 @@ class NodesController(object):
             raise cherrypy.HTTPError(
                 400, 'Malformed POST request data: {0}'.format(errmsg))
 
-        # Successful POST request
-        return 'TODO: add node [{0}]'.format(data['name'])
+        ret = backend.add_meal(data)
+        ret, errors = backend.MealSchema().dump(ret)
+        return data
 
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()

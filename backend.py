@@ -31,7 +31,6 @@ class MealSchema(Schema):
     name = fields.Str()
     date = fields.DateTime(format='%Y-%m-%d %H:%M', default=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
 
-
     @post_load
     def make(self, data):
         return meal(**data)

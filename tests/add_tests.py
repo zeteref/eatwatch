@@ -1,5 +1,6 @@
 import unittest
 import sys
+import json
 import datetime
 
 sys.path.append('../')
@@ -118,3 +119,13 @@ class TestAddObjects(unittest.TestCase):
         none = next(get_meal_ingredients(c('id', '=', to_delete.id)), None)
         self.assertIsNone(none)
 
+
+class TestJsonSerialization(unittest.TestCase):
+
+    def test_simple_serialization(self):
+        dumped, errors = MealSchema().dumps({"date":datetime(2017, 1, 25, 13, 40, 0), "name":"obiad" })
+        self.assertEqual(dumped, '{"name": "obiad", "date": "2017-01-25 13:40"}')
+
+        test, errors  = MealSchema().loads(dumped)
+        self.assertEqual(test.name, 'obiad')
+        self.assertEqual(test.date, datetime(2017, 1, 25, 13, 40, 0))

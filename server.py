@@ -1,17 +1,19 @@
-#!/usr/bin/env python
-
 """
-CherryPy-based webservice daemon with background threads
+CherryPy-based webservice
 """
 
 from __future__ import print_function
+
 import threading
 import json
 import cherrypy
+import cherrypy_cors
+
 from cherrypy.lib import auth_basic
 from cherrypy.process import plugins
-import cherrypy_cors
 from marshmallow import Schema, fields
+
+import backend
 
 class NodesController(object):
     """Controller for fictional "nodes" webservice APIs"""
@@ -44,8 +46,8 @@ class NodesController(object):
         """
 
         request_data = cherrypy.request.json
-
-        data, errors = NodeSchema().load(request_data)
+        data, errors = MealSchema(only=('name', 'date')).load(request_data)
+        import pdb; pdb.set_trace()
 
         if errors:
             # Attempt to format errors dict from Marshmallow

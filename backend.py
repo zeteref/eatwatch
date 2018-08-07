@@ -2,8 +2,10 @@ import sys
 import re
 import sqlite3
 from datetime import datetime
-from marshmallow import Schema, fields, pprint
+from marshmallow import Schema, fields, pprint, post_load
 from functools import namedtuple
+
+condition = namedtuple('condition', ('lval', 'op', 'rval'))
 
 class IngredientSchema(Schema):
     id = fields.Int()
@@ -15,10 +17,28 @@ class IngredientSchema(Schema):
     carbo = fields.Int()
 
 
+    @post_load
+    def make(self, data):
+        return ingredient(**data)
+
+
+    class Meta:
+        ordered = True
+
+
 class MealSchema(Schema):
     id = fields.Int()
     name = fields.Str()
-    date = fields.Date()
+    date = fields.DateTime(format='%Y-%m-%d %H:%M')
+
+
+    @post_load
+    def make(self, data):
+        return meal(**data)
+
+
+    class Meta:
+        ordered = True
 
 
 class MealIngredientSchema(Schema):
@@ -27,8 +47,13 @@ class MealIngredientSchema(Schema):
     ingredient_id = fields.Int()
     quantity = fields.Float()
 
+    @post_load
+    def make(self, data):
+        return meal_ingredient(**data)
 
-condition = namedtuple('condition', ('lval', 'op', 'rval'))
+
+    class Meta:
+        ordered = True
 
 
 Ingredient = namedtuple('Ingredient', IngredientSchema._declared_fields.keys())

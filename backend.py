@@ -29,7 +29,7 @@ class IngredientSchema(Schema):
 class MealSchema(Schema):
     id = fields.Int()
     name = fields.Str()
-    date = fields.DateTime(format='%Y-%m-%d %H:%M')
+    date = fields.DateTime(format='%Y-%m-%d %H:%M', default=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
 
 
     @post_load

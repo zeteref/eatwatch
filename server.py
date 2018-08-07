@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# pylint: disable=invalid-name
-
 """
 CherryPy-based webservice daemon with background threads
 """
@@ -10,33 +8,17 @@ from __future__ import print_function
 import threading
 import json
 import cherrypy
-from cherrypy.lib import auth_basic  # noqa pylint: disable=unused-import
+from cherrypy.lib import auth_basic
 from cherrypy.process import plugins
 import cherrypy_cors
 from marshmallow import Schema, fields
 
-sample_nodes = [
-    'node1',
-    'node2',
-]
-
-
-class NodeSchema(Schema):
-    """
-    Marshmallow schema for nodes object
-    """
-    name = fields.String(required=True)
-
-
-class NodesController(object): \
-        # pylint: disable=too-few-public-methods
-
+class NodesController(object):
     """Controller for fictional "nodes" webservice APIs"""
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')
-    def get_all(self): \
-            # pylint: disable=no-self-use
+    def get_all(self):
         """
         Handler for /nodes (GET)
         """
@@ -56,8 +38,7 @@ class NodesController(object): \
 
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def add_node(self): \
-            # pylint: disable=no-self-use
+    def add_node(self):
         """
         Handler for /nodes (POST)
         """
@@ -80,8 +61,7 @@ class NodesController(object): \
 
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def update_node(self, name): \
-            # pylint: disable=no-self-use
+    def update_node(self, name):
         """
         Handler for /nodes/<name> (PUT)
         """
@@ -97,8 +77,7 @@ class NodesController(object): \
 
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def delete_node(self, name): \
-            # pylint: disable=unused-argument,no-self-use
+    def delete_node(self, name):
         """
         Handler for /nodes/<name> (DELETE)
         """
@@ -111,9 +90,7 @@ class NodesController(object): \
         return ''
 
 
-def jsonify_error(status, message, traceback, version): \
-        # pylint: disable=unused-argument
-
+def jsonify_error(status, message, traceback, version):
     """JSONify all CherryPy error responses (created by raising the
     cherrypy.HTTPError exception)
     """
@@ -132,8 +109,7 @@ def jsonify_error(status, message, traceback, version): \
     return response_body
 
 
-def validate_password(realm, username, password): \
-        # pylint: disable=unused-argument
+def validate_password(realm, username, password):
     """
     Simple password validation
     """

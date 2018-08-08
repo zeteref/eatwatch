@@ -5,19 +5,45 @@ from datetime import datetime
 from marshmallow import Schema, fields, post_load
 
 
-# FIX FOR MARSHMALLOW # TODO: send pull request or wait for fix in fields.py:911
-DATEFORMAT='%Y-%m-%d %H:%M'
-def _strftime(value, localtime):
-    return value.strftime(DATEFORMAT)
-fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[DATEFORMAT] = _strftime
-# END FIX
+def _fix_for_marshmallow_datetime_serialization(_fields):
+    # TODO: send pull request or wait for fix in fields.py:911
+    _date_fields = [x for (_, x) in _fields.items() if isinstance(x, fields.DateTime)]
+    for _date_field in _date_fields:
+        if hasattr(_date_field, 'dateformat'):
+            def _strftime(value, localtime):
+                return value.strftime(_date_field.dateformat)
+
+            fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[_date_field.dateformat] = _strftime
+
 
 class Meta(type):
     def __new__(mcs, name, bases, namespace, **kwargs):
         _fields = [(x,y) for (x, y) in namespace.items() if isinstance(y, fields.Field)]
-        new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
-        new_cls._schema = type(name+'Schema', (Schema,), dict(_fields))
+        _fix_for_marshmallow_datetime_serialization(namespace)
 
+        new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
+
+        def __init__(self, **data):
+            for k,v in data.items():
+                setattr(self, k, v)
+
+        setattr(new_cls, '__init__', __init__)
+
+        _Schema = type(name+'Schema', (Schema,), dict(_fields))
+
+        def load(data):
+            dic, err = _Schema().load(data)
+            print(err)
+            return new_cls(**dic)
+        
+        setattr(new_cls, 'load', load)
+
+        def dump(self):
+            return _Schema().dump(self)
+
+        setattr(new_cls, 'dump', dump)
+
+        new_cls._schema = _Schema
         return new_cls
 
 
@@ -31,8 +57,16 @@ class Test(JsonObject):
     quantity = fields.Float()
     email = fields.Email()
     date = fields.DateTime(
-            format=DATEFORMAT, 
-            missing=lambda: datetime.now().strftime(DATEFORMAT))
+            format='%Y-%m-%d %H:%M', 
+            missing=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
+
+
+t = Test.load({'name':'hello'})
+print(Test._schema().dumps(t))
+#t, e = Test._schema().load({'name':'hello'})
+##
+#print(t, e)
+
 
 class TestSimpleMarshalling(unittest.TestCase):
 

@@ -4,11 +4,18 @@ from datetime import datetime
 
 from marshmallow import Schema, fields, post_load
 
-# TODO: send pull request or wait for fix in fields.py:911
-DATEFORMAT='%Y-%m-%d %H:%M'
-fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[DATEFORMAT] = lambda value, localtime: value.strftime(DATEFORMAT)
 
-class TestSchema(Schema):
+# FIX FOR MARSHMALLOW # TODO: send pull request or wait for fix in fields.py:911
+DATEFORMAT='%Y-%m-%d %H:%M'
+def _strftime(value, localtime):
+    return value.strftime(DATEFORMAT)
+fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[DATEFORMAT] = _strftime
+# END FIX
+
+
+TestSchema = type('TestSchema', (Schema,), dict(name=fields.Str(), email=fields.Email(), date=fields.DateTime(format=DATEFORMAT)))
+
+class MySchema(Schema):
     id = fields.Int()
     name = fields.Str()
     quantity = fields.Float()

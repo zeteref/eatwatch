@@ -4,14 +4,18 @@ from datetime import datetime
 
 from marshmallow import Schema, fields, post_load
 
+# TODO: send pull request or wait for fix in fields.py:911
+DATEFORMAT='%Y-%m-%d %H:%M'
+fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[DATEFORMAT] = lambda value, localtime: value.strftime(DATEFORMAT)
+
 class TestSchema(Schema):
     id = fields.Int()
     name = fields.Str()
-    date = fields.DateTime(
-            format='%Y-%m-%d %H:%M', 
-            missing=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
     quantity = fields.Float()
     email = fields.Email()
+    date = fields.DateTime(
+            format=DATEFORMAT, 
+            missing=lambda: datetime.now().strftime(DATEFORMAT))
 
 
 class Meta(type):
@@ -78,6 +82,9 @@ class TestSimpleMarshalling(unittest.TestCase):
         ret = prepare(ret)
         self.assertEqual(ret['date'], '2010-10-20 23:59')
 
+        ret, err = schema.dump({'date': '2010-10-20 23:59'})
+        self.assertIn('date', err)
+
 
     def test_object_dumping(self):
         self.test_dumping(use_objects=True)
@@ -85,12 +92,3 @@ class TestSimpleMarshalling(unittest.TestCase):
 
     def test_text_dumping(self):
         self.test_dumping(use_objects=False)
-
-
-    def test_date_error(self):
-        schema = self.schema
-
-        ret, err = schema.dump({'date': '2010-10-20 23:59'})
-        self.assertEqual(ret['date'], '2010-10-20 23:59')
-        
-

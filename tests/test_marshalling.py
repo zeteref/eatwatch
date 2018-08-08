@@ -12,10 +12,20 @@ def _strftime(value, localtime):
 fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[DATEFORMAT] = _strftime
 # END FIX
 
+class Meta(type):
+    def __new__(mcs, name, bases, namespace, **kwargs):
+        _fields = [(x,y) for (x, y) in namespace.items() if isinstance(y, fields.Field)]
+        new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
+        new_cls._schema = type(name+'Schema', (Schema,), dict(_fields))
 
-TestSchema = type('TestSchema', (Schema,), dict(name=fields.Str(), email=fields.Email(), date=fields.DateTime(format=DATEFORMAT)))
+        return new_cls
 
-class MySchema(Schema):
+
+class JsonObject(metaclass=Meta):
+    pass
+
+
+class Test(JsonObject):
     id = fields.Int()
     name = fields.Str()
     quantity = fields.Float()
@@ -24,24 +34,10 @@ class MySchema(Schema):
             format=DATEFORMAT, 
             missing=lambda: datetime.now().strftime(DATEFORMAT))
 
-
-class Meta(type):
-    def __new__(mcs, name, bases, namespace, **kwargs):
-        new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
-        user_init = new_cls.__init__
-        def __init__(self, *args, **kwargs):
-            print("New __init__ called")
-            user_init(self, *args, **kwargs)
-            self.extra()
-        print("Replacing __init__")
-        setattr(new_cls, '__init__', __init__)
-        return new_cls
-
-
 class TestSimpleMarshalling(unittest.TestCase):
 
     def setUp(self):
-        self.schema = TestSchema()
+        self.schema = Test._schema()
 
 
     def test_loading(self, use_objects=True):

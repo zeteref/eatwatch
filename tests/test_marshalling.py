@@ -33,7 +33,6 @@ class Meta(type):
 
         def load(data):
             dic, err = _Schema().load(data)
-            print(err)
             return new_cls(**dic)
         
         setattr(new_cls, 'load', load)

@@ -120,10 +120,8 @@ class Storage(object):
             c.execute(delete_sql(name), (id_,))
 
 
-    #select(table=name, fields=fields, where=conds)
     #delete(table=name, where=eq('id', 1))
-    #insert(table=name, keyvalues=values)
-    #update(table=name, keyvalues=values, where=conds)
+    #update(table=name, dic=values, where=conds)
 
     #sql(select(*fields).from(name).where(conds), values)
     #sql(delete().from(name).where(eq('id', 1)), values)
@@ -143,9 +141,12 @@ class Storage(object):
             return (dict(zip(cur_columns, val)) for val in cur.fetchall())
 
 
-    def add(self, name, dic):
-        keys, values = _keysvalues(dic)
+    def insert(self, table, dic):
+        columns, bind = _keysvalues(dic)
+        sql = 'INSERT INTO {}({}) VALUES({})'.format(table, ', '.join(columns), ', '.join('?' * len(columns)))
+    
         with sqlite3.connect(self.constr) as c:
             cur = c.cursor()
-            cur.execute(insert_sql(name, keys), values)
+            cur.execute(sql, bind)
+
             return cur.lastrowid

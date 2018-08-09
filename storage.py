@@ -5,7 +5,7 @@ from model import *
 class MealStorage(Storage):
 
     def add_ingredient(self, ingredient):
-        return self.add('ingredient', ingredient.dump(ignore=('id',)))
+        return self.insert('ingredients', ingredient.dump(ignore=('id',)))
 
 
     def delete_ingredient(self, ingredient):

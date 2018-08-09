@@ -3,6 +3,7 @@ import json
 import unittest
 from datetime import datetime
 from meta import fields, JsonObject
+from model import *
 
 sys.path.append('../')
 

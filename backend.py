@@ -5,195 +5,123 @@ from datetime import datetime
 from functools import namedtuple
 from model import *
 
-condition = namedtuple('condition', ('lval', 'op', 'rval'))
+class InvalidFieldsError(Exception):
+    pass
 
 
-def _table_name(name, cls):
-    name = name if name is not None else cls.__name__.replace('Schema', '')
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower() + 's'
+def select_sql(table_name, fields='*'):
+    if isinstance(fields, str) and fields != '*':
+        raise InvalidFieldsError('Invalid value, fields must be a tuple or str("*")')
 
-
-def prepare_stmt(cls, table_name=None, ignore=None):
-    ignore = ignore if ignore is not None else ['id']
-    fields = cls._fields if hasattr(cls, '_fields') else cls._declared_fields.keys()
-    fields = [x for x in fields if x not in ignore]
-    name = _table_name(table_name, cls)
-
-    return namedtuple('stmt_components', ('fields', 'table_name'))._make(
-            (fields, name))
-
-
-def select_sql(cls, table_name=None, ignore=None):
-    prep = prepare_stmt(cls, table_name, ignore)
-
+    table_name = _table_name(table_name)
     return 'SELECT {} FROM {} WHERE 1 = 1'.format(
-            ', '.join(prep.fields),
-            prep.table_name)
+            ', '.join(fields),
+            table_name)
 
 
-def insert_sql(cls, table_name=None, ignore=None):
-    prep = prepare_stmt(cls, table_name, ignore)
-
+def insert_sql(table_name, fields):
+    table_name = _table_name(table_name)
     return 'INSERT INTO {}({}) VALUES({})'.format(
-           prep.table_name, 
-           ', '.join(prep.fields), 
-           ', '.join('?' * len(prep.fields)))
+           table_name, 
+           ', '.join(fields), 
+           ', '.join('?' * len(fields)))
 
 
-def delete_sql(cls, table_name=None, id_='id'):
-    table_name = _table_name(table_name, cls)
+def delete_sql(table_name, fields=None):
+    if fields is None: fields = ('id',)
+    table_name = _table_name(table_name)
     return 'DELETE FROM {} WHERE {} = ?'.format(table_name, id_)
 
 
-class sqliteconn():
+class Storage(object):
 
-    def __init__(self, fname='example.db'):
-        self.fname = fname
-
-
-    def __enter__(self):
-        self.connection = sqlite3.connect(self.fname)
-        return self.connection
+    def __init__(self, constr):
+        self.constr = constr
 
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.connection.commit()
-        self.connection.close()
+    def drop_db(self):
+        statements = [
+                """DROP TABLE meal_ingredients""",
+                """DROP TABLE ingredients""",
+                """DROP TABLE meals"""
+        ]
+
+        with sqlite3.connect(self.constr) as c:
+            for stmt in statements:
+                try:
+                    c.execute(stmt)
+                except:
+                    pass
 
 
-def drop_db(fname):
-    statements = [
-            """DROP TABLE meal_ingredients""",
-            """DROP TABLE ingredients""",
-            """DROP TABLE meals"""
-    ]
+    def create_db(self):
+        statements = [
+                """
+                    CREATE TABLE ingredients (
+                        id INTEGER PRIMARY KEY,
+                        name TEXT,
+                        calories FLOAT DEFAULT 0 NOT NULL,
+                        sugar FLOAT DEFAULT 0 NOT NULL,
+                        veg_protein FLOAT DEFAULT 0 NOT NULL,
+                        protein FLOAT DEFAULT 0 NOT NULL,
+                        carbo FLOAT DEFAULT 0 NOT NULL
+                    )
+                """,
+                """
+                    CREATE TABLE meals (
+                        id INTEGER PRIMARY KEY,
+                        date TEXT NOT NULL,
+                        name TEXT
+                    )
+                """,
+                """
+                    CREATE TABLE meal_ingredients (
+                        id INTEGER PRIMARY KEY,
+                        ingredient_id INTEGER NOT NULL,
+                        meal_id INTEGER NOT NULL,
+                        quantity FLOAT NOT NULL,
+                        FOREIGN KEY(meal_id) REFERENCES meal(id)
+                        FOREIGN KEY(ingredient_id) REFERENCES ingredient(id)
+                    )
+                """
+        ]
 
-    with sqliteconn(fname) as con:
-        c = con.cursor()
-        for stmt in statements:
-            try:
+        with sqlite3.connect(self.constr) as c:
+            for stmt in statements:
                 c.execute(stmt)
-            except:
-                pass
 
 
-def create_db(fname):
-    statements = [
-            """
-                CREATE TABLE ingredients (
-                    id INTEGER PRIMARY KEY,
-                    name TEXT,
-                    calories FLOAT DEFAULT 0 NOT NULL,
-                    sugar FLOAT DEFAULT 0 NOT NULL,
-                    veg_protein FLOAT DEFAULT 0 NOT NULL,
-                    protein FLOAT DEFAULT 0 NOT NULL,
-                    carbo FLOAT DEFAULT 0 NOT NULL
-                )
-            """,
-            """
-                CREATE TABLE meals (
-                    id INTEGER PRIMARY KEY,
-                    date TEXT NOT NULL,
-                    name TEXT
-                )
-            """,
-            """
-                CREATE TABLE meal_ingredients (
-                    id INTEGER PRIMARY KEY,
-                    ingredient_id INTEGER NOT NULL,
-                    meal_id INTEGER NOT NULL,
-                    quantity FLOAT NOT NULL,
-                    FOREIGN KEY(meal_id) REFERENCES meal(id)
-                    FOREIGN KEY(ingredient_id) REFERENCES ingredient(id)
-                )
-            """
-    ]
-
-    with sqliteconn(fname) as conn:
-        c = conn.cursor()
-        for stmt in statements:
-            c.execute(stmt)
+    def _table_name(name):
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower() + 's'
 
 
-def add_object(obj, cls=None):
-    cls = obj.__class__ if cls is None else cls 
+    def add(self, name, dic):
+        with sqlite3.connect(self.constr) as c:
+            c.execute(insert_sql(dic.keys()), dic.values())
 
-    with sqliteconn() as con:
-        c = con.cursor()
-        c.execute(insert_sql(cls), obj[1:])
-
-    return obj._replace(id=c.lastrowid)
+        return c.lastrowid
 
 
-def delete_object(obj, cls=None):
-    cls = obj.__class__ if cls is None else cls 
-
-    with sqliteconn() as con:
-        c = con.cursor()
-        c.execute(delete_sql(cls), (obj.id,))
+    def delete(self, name, id_):
+        with sqlite3.connect(self.constr) as c:
+            c.execute(delete_sql(name), (id_,))
 
 
-def get_objects(cls, *args):
-    sql = select_sql(cls, ignore=[])
+    def get(self, name, *fields, where=None):
+        sql = select_sql(name, ignore=[])
 
-    conditions = [x for x in args if isinstance(x, condition)]
-    sql = [sql]
+        if not fields: fields= ('*',)
 
-    for cond in conditions:
-        sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
+        conditions = [x for x in where if isinstance(x, condition)]
+        sql = [sql]
 
-    sql = '\n'.join(sql)
-    with sqliteconn() as con:
-        c = con.cursor()
-        c.execute(sql, [x.rval for x in conditions])
+        for cond in conditions:
+            sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
 
-        return (cls._make(o) for o in c.fetchall())
+        sql = '\n'.join(sql)
+        with sqliteconn() as con:
+            c = con.cursor()
+            c.execute(sql, [x.rval for x in conditions])
 
-
-def add_ingredient(ingredient):
-    return add_object(ingredient)
-
-
-def delete_ingredient(ingredient):
-    return delete_object(ingredient)
-
-
-def get_ingredients(*args):
-    return get_objects(Ingredient, *args)
-
-
-def add_meal(meal):
-    return add_object(meal)
-
-
-def delete_meal(meal):
-    return delete_object(meal)
-
-
-def get_meals(*args):
-    return get_objects(Meal, *args)
-
-
-def add_meal_ingredient(meal_ingredient):
-    return add_object(meal_ingredient)
-
-
-def delete_meal_ingredient(meal_ingredient):
-    return delete_object(meal_ingredient)
-
-
-def get_meal_ingredients(*args):
-    return get_objects(MealIngredient, *args)
-
-
-def __main__():
-    if len(sys.argv) > 1 and sys.argv[1] == '--create':
-        dbname = sys.argv[2] if len(sys.argv) > 2 else 'example.db'
-
-        drop_db(dbname)
-        create_db(dbname)
-
-
-if __name__ == '__main__':
-    __main__()
+            return (cls._make(o) for o in c.fetchall())

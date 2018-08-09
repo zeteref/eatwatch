@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 from marshmallow import Schema, fields, post_load
 
+__all__ = ['JsonObject', 'fields']
+
 def _fix_for_marshmallow_datetime_serialization(_fields):
     # TODO: send pull request or wait for fix in fields.py:911
     _date_fields = [x for (_, x) in _fields.items() if isinstance(x, fields.DateTime)]

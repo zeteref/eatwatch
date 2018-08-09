@@ -1,5 +1,7 @@
 from meta import JsonObject, fields
 
+__all__ = ['Ingredient', 'Meal', 'MealIngredient']
+
 class Ingredient(JsonObject):
     id = fields.Int()
     name = fields.Str()

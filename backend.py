@@ -127,15 +127,14 @@ class Storage(object):
 
         sql = [sql]
 
-        conditions = []
-        for cond in conditions:
+        for cond in where:
             sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
 
         sql = '\n'.join(sql)
         with sqlite3.connect(self.constr) as c:
             cur = c.cursor()
-            cur.execute(sql)
+            cur.execute(sql, [cond.rval for cond in where])
             ret = [x for x in cur.fetchall()]
             fields = [x[0] for x in cur.description]
             
-            return [dict(zip(fields, x)) for x in ret]
+            return (dict(zip(fields, x)) for x in ret)

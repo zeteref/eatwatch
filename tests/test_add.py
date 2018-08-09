@@ -27,34 +27,25 @@ class TestAddObjects(unittest.TestCase):
         self.storage.clear_db()
 
 
-    def test_my_tes(self):
-        i = Ingredient(name='test', protein=1.1)
-        self.storage.add_ingredient(i)
-        i.carbo = 2.0
-        self.storage.add_ingredient(i)
-
-        ingredients = self.storage.get_ingredients()
-
-
     def test_add_ingredient(self):
-        add = add_ingredient(dict(name='test', 
-                                  calories=1.1,
-                                  sugar=2.2,
-                                  veg_protein=3.3,
-                                  protein=4.4,
-                                  carbo=5.5))
+        id_ = self.storage.add_ingredient(Ingredient(name='test', 
+                                                     calories=1.1,
+                                                     sugar=2.2,
+                                                     veg_protein=3.3,
+                                                     protein=4.4,
+                                                     carbo=5.5))
 
 
-        test = next(get_ingredients(eq('id', add.id)), None)
-        self.assertEqual(test.id, add.id)
+        test = next(self.storage.get_ingredients(eq('id', id_)), None)
 
-        self.assertEqual(test.calories, 1)
-        self.assertEqual(test.sugar, 2)
-        self.assertEqual(test.veg_protein, 3)
-        self.assertEqual(test.protein, 4)
-        self.assertEqual(test.carbo, 5)
+        self.assertEqual(test.id, id_)
+        self.assertEqual(test.calories, 1.1)
+        self.assertEqual(test.sugar, 2.2)
+        self.assertEqual(test.veg_protein, 3.3)
+        self.assertEqual(test.protein, 4.4)
+        self.assertEqual(test.carbo, 5.5)
 
-        none = next(get_ingredients(c('id', '!=', add.id)), None)
+        none = next(self.storage.get_ingredients(neq('id', id_)), None)
         self.assertIsNone(none)
 
         return test

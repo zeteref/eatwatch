@@ -12,8 +12,8 @@ class MealStorage(Storage):
         return self.delete(ingredient)
 
 
-    def get_ingredients(self, *where):
-        dics = self.get('ingredient', Ingredient.fields(), where=where)
+    def get_ingredients(self, *conds):
+        dics = self.select('ingredients', Ingredient.fields(), conds)
         return (Ingredient.load(dic) for dic in dics)
 
 
@@ -26,7 +26,7 @@ class MealStorage(Storage):
 
 
     def get_meals(self, *args):
-        return self.get(Meal.fields(), *args)
+        return self.select(Meal.fields(), *args)
 
 
     def add_meal_ingredient(self, meal_ingredient):

@@ -38,10 +38,9 @@ def insert_sql(table_name, fields):
            ', '.join('?' * len(fields)))
 
 
-def delete_sql(table_name, fields=None):
-    if fields is None: fields = ('id',)
+def delete_sql(table_name):
     table_name = _table_name(table_name)
-    return 'DELETE FROM {} WHERE {} = ?'.format(table_name, id_)
+    return 'DELETE FROM {} WHERE 1 = 1'.format(table_name)
 
 
 class Storage(object):
@@ -109,32 +108,44 @@ class Storage(object):
                 c.execute(stmt)
 
 
+
+
+    def delete(self, name, where):
+        sql = [delete_sql(name)]
+        for cond in where:
+            sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
+
+
+        with sqlite3.connect(self.constr) as c:
+            c.execute(delete_sql(name), (id_,))
+
+
+    #select(table=name, fields=fields, where=conds)
+    #delete(table=name, where=eq('id', 1))
+    #insert(table=name, keyvalues=values)
+    #update(table=name, keyvalues=values, where=conds)
+
+    #sql(select(*fields).from(name).where(conds), values)
+    #sql(delete().from(name).where(eq('id', 1)), values)
+
+
+    def select(self, table, columns, conds):
+        sql = ['SELECT {} FROM {} WHERE 1 = 1'.format(', '.join(columns), table)]
+        for cond in conds:
+            sql.append('AND {} {} ?'.format(cond.lval, cond.op))
+        bind = tuple(cond.rval for cond in conds)
+
+        with sqlite3.connect(self.constr) as c:
+            cur = c.cursor()
+            cur.execute('\n'.join(sql), bind)
+            cur_columns = [x[0] for x in cur.description]         
+    
+            return (dict(zip(cur_columns, val)) for val in cur.fetchall())
+
+
     def add(self, name, dic):
         keys, values = _keysvalues(dic)
         with sqlite3.connect(self.constr) as c:
             cur = c.cursor()
             cur.execute(insert_sql(name, keys), values)
             return cur.lastrowid
-
-
-    def delete(self, name, id_):
-        with sqlite3.connect(self.constr) as c:
-            c.execute(delete_sql(name), (id_,))
-
-
-    def get(self, name, *fields, where=None):
-        sql = select_sql(name, *fields)
-
-        sql = [sql]
-
-        for cond in where:
-            sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
-
-        sql = '\n'.join(sql)
-        with sqlite3.connect(self.constr) as c:
-            cur = c.cursor()
-            cur.execute(sql, [cond.rval for cond in where])
-            ret = [x for x in cur.fetchall()]
-            fields = [x[0] for x in cur.description]
-            
-            return (dict(zip(fields, x)) for x in ret)

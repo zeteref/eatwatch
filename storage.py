@@ -4,24 +4,17 @@ from model import *
 
 class MealStorage(Storage):
 
-    def init(self):
-        self.create_db()
-
-
-    def clear(self):
-        self.drop_db()
-
-
     def add_ingredient(self, ingredient):
-        return self.add(ingredient)
+        return self.add('ingredient', ingredient.dump(ignore=('id',)))
 
 
     def delete_ingredient(self, ingredient):
         return self.delete(ingredient)
 
 
-    def get_ingredients(self, *args):
-        return self.get(Ingredient, *args)
+    def get_ingredients(self):
+        dics = self.get('ingredient', Ingredient.fields())
+        return [Ingredient.load(dic) for dic in dics]
 
 
     def add_meal(self, meal):
@@ -33,7 +26,7 @@ class MealStorage(Storage):
 
 
     def get_meals(self, *args):
-        return self.get(Meal, *args)
+        return self.get(Meal.fields(), *args)
 
 
     def add_meal_ingredient(self, meal_ingredient):
@@ -53,8 +46,8 @@ def __main__():
         dbname = sys.argv[2] if len(sys.argv) > 2 else 'example.db'
         storage = MealStorage(dbname)
 
-        storage.clear()
-        storage.init()
+        storage.drop_db()
+        storage.create_db()
 
 
 if __name__ == '__main__':

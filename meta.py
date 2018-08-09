@@ -32,6 +32,10 @@ class Meta(type):
         _Schema = type(name+'Schema', (Schema,), dict(schema_fields))
 
 
+        def _fields():
+            return [k for (k,v) in schema_fields]
+
+
         def loads(data):
             dic, err = _Schema().loads(data)
             return new_cls(**dic)
@@ -47,8 +51,14 @@ class Meta(type):
             return new_cls(**dic)
 
 
-        def dump(self):
+        def dump(self, ignore=None):
             ret, err = _Schema().dump(self)
+
+            if ignore is not None:
+                for key in ignore:
+                    if key in ret: 
+                        ret.pop(key)
+
             return ret
 
 
@@ -61,6 +71,7 @@ class Meta(type):
         setattr(new_cls, 'loads', load)
         setattr(new_cls, 'dump', dump)
         setattr(new_cls, 'dumps', dumps)
+        setattr(new_cls, 'fields', _fields)
         
 
         new_cls._schema = _Schema

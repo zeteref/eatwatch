@@ -9,6 +9,17 @@ class InvalidFieldsError(Exception):
     pass
 
 
+def _table_name(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower() + 's'
+
+
+def _keysvalues(dic):
+    items = dic.items()
+    kv = namedtuple('keysvalues', ['keys', 'values'])
+    return kv(tuple(x[0] for x in items), tuple(x[1] for x in items))
+
+
 def select_sql(table_name, fields='*'):
     if isinstance(fields, str) and fields != '*':
         raise InvalidFieldsError('Invalid value, fields must be a tuple or str("*")')
@@ -37,6 +48,13 @@ class Storage(object):
 
     def __init__(self, constr):
         self.constr = constr
+
+    
+    def clear_db(self):
+        with sqlite3.connect(self.constr) as c:
+            c.execute('DELETE FROM meal_ingredients')
+            c.execute('DELETE FROM ingredients')
+            c.execute('DELETE FROM meals')
 
 
     def drop_db(self):
@@ -91,16 +109,12 @@ class Storage(object):
                 c.execute(stmt)
 
 
-    def _table_name(name):
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower() + 's'
-
-
     def add(self, name, dic):
+        keys, values = _keysvalues(dic)
         with sqlite3.connect(self.constr) as c:
-            c.execute(insert_sql(dic.keys()), dic.values())
-
-        return c.lastrowid
+            cur = c.cursor()
+            cur.execute(insert_sql(name, keys), values)
+            return cur.lastrowid
 
 
     def delete(self, name, id_):
@@ -109,19 +123,19 @@ class Storage(object):
 
 
     def get(self, name, *fields, where=None):
-        sql = select_sql(name, ignore=[])
+        sql = select_sql(name, *fields)
 
-        if not fields: fields= ('*',)
-
-        conditions = [x for x in where if isinstance(x, condition)]
         sql = [sql]
 
+        conditions = []
         for cond in conditions:
             sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
 
         sql = '\n'.join(sql)
-        with sqliteconn() as con:
-            c = con.cursor()
-            c.execute(sql, [x.rval for x in conditions])
-
-            return (cls._make(o) for o in c.fetchall())
+        with sqlite3.connect(self.constr) as c:
+            cur = c.cursor()
+            cur.execute(sql)
+            ret = [x for x in cur.fetchall()]
+            fields = [x[0] for x in cur.description]
+            
+            return [dict(zip(fields, x)) for x in ret]

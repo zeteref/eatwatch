@@ -1,5 +1,7 @@
 from functools import namedtuple
 
+__all__ = ['cond', 'eq', 'lt', 'gt', 'neq', 'like']
+
 def cond(*args):
     c = namedtuple('condition', ['op', 'rval', 'lval'])
     return c(*args)

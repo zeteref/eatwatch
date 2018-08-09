@@ -5,40 +5,47 @@ import datetime
 
 sys.path.append('../')
 
-from backend import *
+from model import *
+from storage import MealStorage
+from conditions import *
 
 class TestAddObjects(unittest.TestCase):
 
-    dbname = 'example.db'
-
     @classmethod
     def setUpClass(cls):
-        drop_db(cls.dbname)
-        create_db(cls.dbname)
+        cls.storage = MealStorage('example.db')
+        cls.storage.drop_db()
+        cls.storage.create_db()
 
 
     @classmethod
     def tearDownClass(cls):
-        drop_db(cls.dbname)
+        cls.storage.clear_db()
 
 
     def setUp(self):
-        with sqliteconn() as conn:
-            c = conn.cursor()
-            c.execute('DELETE FROM meal_ingredients')
-            c.execute('DELETE FROM ingredients')
-            c.execute('DELETE FROM meals')
+        self.storage.clear_db()
+
+
+    def test_my_tes(self):
+        i = Ingredient(name='test', protein=1.1)
+        self.storage.add_ingredient(i)
+        i.carbo = 2.0
+        self.storage.add_ingredient(i)
+
+        ingredients = self.storage.get_ingredients()
 
 
     def test_add_ingredient(self):
-        add = add_ingredient(ingredient('test', 
-                                        calories='1',
-                                        sugar='2',
-                                        veg_protein=3,
-                                        protein=4,
-                                        carbo='5'))
-        c = condition
-        test = next(get_ingredients(c('id', '=', add.id)), None)
+        add = add_ingredient(dict(name='test', 
+                                  calories=1.1,
+                                  sugar=2.2,
+                                  veg_protein=3.3,
+                                  protein=4.4,
+                                  carbo=5.5))
+
+
+        test = next(get_ingredients(eq('id', add.id)), None)
         self.assertEqual(test.id, add.id)
 
         self.assertEqual(test.calories, 1)

@@ -18,8 +18,9 @@ def _fix_for_marshmallow_datetime_serialization(_fields):
 
 class Meta(type):
     def __new__(mcs, name, bases, namespace, **kwargs):
-        _fields = [(x,y) for (x, y) in namespace.items() if isinstance(y, fields.Field)]
         _fix_for_marshmallow_datetime_serialization(namespace)
+        schema_fields = [(k,v) for (k,v) in namespace.items() if isinstance(v, fields.Field)]
+        namespace = dict([(k,v) for (k,v) in namespace.items() if not isinstance(v, fields.Field)])
 
         new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
 
@@ -29,7 +30,7 @@ class Meta(type):
 
         setattr(new_cls, '__init__', __init__)
 
-        _Schema = type(name+'Schema', (Schema,), dict(_fields))
+        _Schema = type(name+'Schema', (Schema,), dict(schema_fields))
 
         def load(data):
             dic, err = _Schema().load(data)
@@ -109,17 +110,23 @@ class TestSimpleMarshalling(unittest.TestCase):
 
         ret, err = dump({'email':'test'})
         self.assertIn('email', err)
+        err.pop('email')
+        self.assertEqual(err, {})
 
         ret, err = dump({'email':'test@test.com'})
         ret = prepare(ret)
         self.assertEqual(ret['email'], 'test@test.com')
+        self.assertEqual(err, {})
 
         ret, err = dump({'date': datetime(2010, 10, 20, 23, 59)})
         ret = prepare(ret)
         self.assertEqual(ret['date'], '2010-10-20 23:59')
+        self.assertEqual(err, {})
 
         ret, err = schema.dump({'date': '2010-10-20 23:59'})
         self.assertIn('date', err)
+        err.pop('date')
+        self.assertEqual(err, {})
 
 
     def test_object_dumping(self):

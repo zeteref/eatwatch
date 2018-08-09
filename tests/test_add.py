@@ -48,6 +48,10 @@ class TestAddObjects(unittest.TestCase):
         none = next(self.storage.get_ingredients(neq('id', id_)), None)
         self.assertIsNone(none)
 
+        self.storage.delete_ingredient(eq('id', id_))
+        none = next(self.storage.get_ingredients(eq('id', id_)), None)
+        self.assertIsNone(none)
+
         return test
 
 

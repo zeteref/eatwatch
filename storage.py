@@ -8,8 +8,8 @@ class MealStorage(Storage):
         return self.insert('ingredients', ingredient.dump(ignore=('id',)))
 
 
-    def delete_ingredient(self, ingredient):
-        return self.delete(ingredient)
+    def delete_ingredient(self, *conds):
+        return self.delete('ingredients', conds)
 
 
     def get_ingredients(self, *conds):

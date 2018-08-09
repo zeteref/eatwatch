@@ -20,29 +20,6 @@ def _keysvalues(dic):
     return kv(tuple(x[0] for x in items), tuple(x[1] for x in items))
 
 
-def select_sql(table_name, fields='*'):
-    if isinstance(fields, str) and fields != '*':
-        raise InvalidFieldsError('Invalid value, fields must be a tuple or str("*")')
-
-    table_name = _table_name(table_name)
-    return 'SELECT {} FROM {} WHERE 1 = 1'.format(
-            ', '.join(fields),
-            table_name)
-
-
-def insert_sql(table_name, fields):
-    table_name = _table_name(table_name)
-    return 'INSERT INTO {}({}) VALUES({})'.format(
-           table_name, 
-           ', '.join(fields), 
-           ', '.join('?' * len(fields)))
-
-
-def delete_sql(table_name):
-    table_name = _table_name(table_name)
-    return 'DELETE FROM {} WHERE 1 = 1'.format(table_name)
-
-
 class Storage(object):
 
     def __init__(self, constr):
@@ -108,25 +85,6 @@ class Storage(object):
                 c.execute(stmt)
 
 
-
-
-    def delete(self, name, where):
-        sql = [delete_sql(name)]
-        for cond in where:
-            sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
-
-
-        with sqlite3.connect(self.constr) as c:
-            c.execute(delete_sql(name), (id_,))
-
-
-    #delete(table=name, where=eq('id', 1))
-    #update(table=name, dic=values, where=conds)
-
-    #sql(select(*fields).from(name).where(conds), values)
-    #sql(delete().from(name).where(eq('id', 1)), values)
-
-
     def select(self, table, columns, conds):
         sql = ['SELECT {} FROM {} WHERE 1 = 1'.format(', '.join(columns), table)]
         for cond in conds:
@@ -150,3 +108,14 @@ class Storage(object):
             cur.execute(sql, bind)
 
             return cur.lastrowid
+
+
+    def delete(self, table, conds):
+        sql = ['DELETE FROM {} WHERE 1 = 1'.format(table)]
+
+        for cond in conds:
+            sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
+        bind = tuple(cond.rval for cond in conds)
+
+        with sqlite3.connect(self.constr) as c:
+            c.execute('\n'.join(sql), bind)

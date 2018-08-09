@@ -2,73 +2,10 @@ import sys
 import re
 import sqlite3
 from datetime import datetime
-from marshmallow import Schema, fields, pprint, post_load
 from functools import namedtuple
+from model import *
 
 condition = namedtuple('condition', ('lval', 'op', 'rval'))
-
-class IngredientSchema(Schema):
-    id = fields.Int()
-    name = fields.Str()
-    calories = fields.Int()
-    sugar = fields.Int()
-    veg_protein = fields.Int()
-    protein = fields.Int()
-    carbo = fields.Int()
-
-
-    @post_load
-    def make(self, data):
-        return ingredient(**data)
-
-
-    class Meta:
-        ordered = True
-
-
-class MealSchema(Schema):
-    id = fields.Int()
-    name = fields.Str()
-    date = fields.DateTime(format='%Y-%m-%d %H:%M', default=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
-
-    @post_load
-    def make(self, data):
-        return meal(**data)
-
-
-    class Meta:
-        ordered = True
-
-
-class MealIngredientSchema(Schema):
-    id = fields.Int()
-    meal_id = fields.Int()
-    ingredient_id = fields.Int()
-    quantity = fields.Float()
-
-    @post_load
-    def make(self, data):
-        return meal_ingredient(**data)
-
-
-    class Meta:
-        ordered = True
-
-
-Ingredient = namedtuple('Ingredient', IngredientSchema._declared_fields.keys())
-def ingredient(name=None, **kwds):
-    templ = Ingredient(None, name, 0, 0, 0, 0, 0)
-    return templ._replace(**kwds)
-
-
-Meal = namedtuple('Meal', MealSchema._declared_fields.keys())
-def meal(name, date=datetime.now()):
-    return Meal(None, name, date)
-
-
-MealIngredient = namedtuple('MealIngredient', MealIngredientSchema._declared_fields.keys())
-def meal_ingredient(meal_id, ingredient_id, quantity): 
-    return MealIngredient(None, meal_id, ingredient_id, quantity)
 
 
 def _table_name(name, cls):
@@ -147,11 +84,11 @@ def create_db(fname):
                 CREATE TABLE ingredients (
                     id INTEGER PRIMARY KEY,
                     name TEXT,
-                    calories INTEGER NOT NULL,
-                    sugar INTEGER NOT NULL,
-                    veg_protein INTEGER NOT NULL,
-                    protein INTEGER NOT NULL,
-                    carbo INTEGER NOT NULL
+                    calories FLOAT DEFAULT 0 NOT NULL,
+                    sugar FLOAT DEFAULT 0 NOT NULL,
+                    veg_protein FLOAT DEFAULT 0 NOT NULL,
+                    protein FLOAT DEFAULT 0 NOT NULL,
+                    carbo FLOAT DEFAULT 0 NOT NULL
                 )
             """,
             """

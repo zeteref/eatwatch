@@ -170,3 +170,31 @@ class TestSimpleClassesMarshalling(unittest.TestCase):
 
     def test_class_2_text(self):
         a = Test.loads('{"name":"hello"}')
+        self.assertEqual(a.name, 'hello')
+        test_vars = vars(a)
+        self.assertEqual(len(test_vars), 2)
+        self.assertIn('date', test_vars)
+        self.assertIn('name', test_vars)
+
+        a = Test.load('{"name":"hello"}')
+        self.assertEqual(a.name, 'hello')
+        test_vars = vars(a)
+        self.assertEqual(len(test_vars), 2)
+        self.assertIn('date', test_vars)
+        self.assertIn('name', test_vars)
+
+
+        a = Test.load('{"date":"2010-11-22 22:59"}')
+        self.assertEqual(a.date, datetime(2010, 11, 22, 22, 59))
+        test_vars = vars(a)
+        self.assertEqual(len(test_vars), 1)
+        self.assertIn('date', test_vars)
+
+        test_dic = a.dump()
+        self.assertEqual(test_dic['date'], '2010-11-22 22:59')
+
+        test_json = a.dumps()
+        self.assertEqual(test_json, '{"date": "2010-11-22 22:59"}')
+
+        test_cls = Test.load(test_json)
+        self.assertEqual(test_cls.date, datetime(2010, 11, 22, 22, 59))

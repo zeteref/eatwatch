@@ -32,23 +32,46 @@ class Meta(type):
 
         _Schema = type(name+'Schema', (Schema,), dict(schema_fields))
 
-        def load(data):
-            dic, err = _Schema().load(data)
+
+        def loads(data):
+            dic, err = _Schema().loads(data)
             return new_cls(**dic)
         
-        setattr(new_cls, 'load', load)
+
+        # since we will be *only* marshalling/unmarshalling objects
+        # assume input is a dict. if instead it's a string assume dict in text (json)
+        def load(data):
+            if isinstance(data, str):
+                return loads(data)
+
+            dic, err = _Schema().load(data)
+            return new_cls(**dic)
+
 
         def dump(self):
-            return _Schema().dump(self)
+            ret, err = _Schema().dump(self)
+            return ret
 
+
+        def dumps(self):
+            ret, err = _Schema().dumps(self)
+            return ret
+
+
+        setattr(new_cls, 'load', load)
+        setattr(new_cls, 'loads', load)
         setattr(new_cls, 'dump', dump)
+        setattr(new_cls, 'dumps', dumps)
+        
 
         new_cls._schema = _Schema
         return new_cls
 
 
 class JsonObject(metaclass=Meta):
-    pass
+
+    def __repr__(self):
+        return "{}{}".format(self.__class__.__name__, vars(self))
 
 
 class Test(JsonObject):
@@ -59,13 +82,6 @@ class Test(JsonObject):
     date = fields.DateTime(
             format='%Y-%m-%d %H:%M', 
             missing=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
-
-
-t = Test.load({'name':'hello'})
-print(Test._schema().dumps(t))
-#t, e = Test._schema().load({'name':'hello'})
-##
-#print(t, e)
 
 
 class TestSimpleMarshalling(unittest.TestCase):
@@ -135,3 +151,22 @@ class TestSimpleMarshalling(unittest.TestCase):
 
     def test_text_dumping(self):
         self.test_dumping(use_objects=False)
+
+
+class TestSimpleClassesMarshalling(unittest.TestCase):
+
+    def test_class_2_object(self):
+        a = Test.load({'name':'hello'})
+        self.assertEqual(a.name, 'hello')
+        test_vars = vars(a)
+        self.assertEqual(len(test_vars), 2)
+        self.assertIn('name', test_vars)
+        self.assertIn('date', test_vars)
+
+        b = a.dump()
+        self.assertEqual(b['name'], 'hello')
+        self.assertIn('date', b)
+
+
+    def test_class_2_text(self):
+        a = Test.loads('{"name":"hello"}')

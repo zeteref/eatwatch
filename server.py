@@ -37,7 +37,7 @@ class MealsController(object):
     @cherrypy.tools.json_out()
     def get(self, name):
         """
-        Handler for /nodes/<name> (GET)
+        Handler for /meals/<name> (GET)
         """
 
         if name not in sample_nodes:

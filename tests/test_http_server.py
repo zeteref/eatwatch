@@ -26,4 +26,9 @@ class TestSimpleRequests(unittest.TestCase):
 
     def test(self):
         r = POST('/meals', Meal(name='luncz').dumps())
+        new = Meal.loads(r.text)
 
+        data = json.loads(GET('/meals').text)
+        meals = [Meal.load(x) for x in data]
+
+        meal = next(x for x in meals if x.id == new.id)

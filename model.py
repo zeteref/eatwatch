@@ -1,4 +1,6 @@
+from datetime import datetime
 from meta import JsonObject, fields
+
 
 __all__ = ['Ingredient', 'Meal', 'MealIngredient']
 

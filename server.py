@@ -9,22 +9,29 @@ import json
 import cherrypy
 import cherrypy_cors
 
+from pathlib import Path
+
 from cherrypy.lib import auth_basic
 from cherrypy.process import plugins
 from marshmallow import Schema, fields
 
-import backend
+from storage import MealStorage
+from model import *
+from conditions import *
 
-class NodesController(object):
-    """Controller for fictional "nodes" webservice APIs"""
+class MealsController(object):
+    def __init__(self):
+        self.storage = MealStorage('example.db')
+
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')
     def get_all(self):
         """
-        Handler for /nodes (GET)
+        Handler for /meals (GET)
         """
-        return [{'name': name} for name in sample_nodes]
+
+        return [x.dump() for x in self.storage.get_meals()]
 
 
     @cherrypy.tools.json_out()
@@ -39,16 +46,18 @@ class NodesController(object):
 
         return [{'name': name}]
 
+
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
-    def add_node(self):
+    def add_meal(self):
         """
         Handler for /nodes (POST)
         """
 
         request_data = cherrypy.request.json
-        data, errors = backend.MealSchema(only=('name', 'date')).load(request_data)
+        meal = Meal.load(request_data)
 
+        errors = []
         if errors:
             # Attempt to format errors dict from Marshmallow
             errmsg = ', '.join(
@@ -58,9 +67,10 @@ class NodesController(object):
             raise cherrypy.HTTPError(
                 400, 'Malformed POST request data: {0}'.format(errmsg))
 
-        ret = backend.add_meal(data)
-        ret, errors = backend.MealSchema().dump(ret)
-        return data
+        id_ = self.storage.add_meal(meal)
+        meal.id = id_
+        return meal.dump()
+
 
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
@@ -124,11 +134,11 @@ if __name__ == '__main__':
 
     dispatcher = cherrypy.dispatch.RoutesDispatcher()
 
-    # /nodes (GET)
-    dispatcher.connect(name='nodes',
-                       route='/nodes',
+    # /meals (GET)
+    dispatcher.connect(name='meals',
+                       route='/meals',
                        action='get_all',
-                       controller=NodesController(),
+                       controller=MealsController(),
                        conditions={'method': ['GET']})
 
     # /nodes/{name} (GET)
@@ -137,31 +147,34 @@ if __name__ == '__main__':
     dispatcher.connect(name='nodes',
                        route='/nodes/{name}',
                        action='get',
-                       controller=NodesController(),
+                       controller=MealsController(),
                        conditions={'method': ['GET']})
 
     # /nodes/{name} (POST)
-    dispatcher.connect(name='nodes',
-                       route='/nodes',
-                       action='add_node',
-                       controller=NodesController(),
+    dispatcher.connect(name='meals',
+                       route='/meals',
+                       action='add_meal',
+                       controller=MealsController(),
                        conditions={'method': ['POST']})
 
     # /nodes/{name} (PUT)
     dispatcher.connect(name='nodes',
                        route='/nodes/{name}',
                        action='update_node',
-                       controller=NodesController(),
+                       controller=MealsController(),
                        conditions={'method': ['PUT']})
 
     # /nodes/{name} (DELETE)
     dispatcher.connect(name='nodes',
                        route='/nodes/{name}',
                        action='delete_node',
-                       controller=NodesController(),
+                       controller=MealsController(),
                        conditions={'method': ['DELETE']})
 
     config = {
+        'global': {
+            'engine.autoreload.on': True
+        },
         '/': {
             'request.dispatch': dispatcher,
             'error_page.default': jsonify_error,
@@ -178,9 +191,17 @@ if __name__ == '__main__':
     cherrypy.tree.mount(root=None, config=config)
 
     cherrypy.config.update({
+        'engine.autoreload.on' : True,
         # 'server.socket_host': '0.0.0.0',
         'server.socket_port': 8080,
     })
 
+    cherrypy.config.update({
+        'global': {
+            'engine.autoreload.on' : True
+        }
+    })
+
     cherrypy.engine.start()
-    #cherrypy.engine.block()
+    cherrypy.engine.block()
+    #cherrypy.quickstart()

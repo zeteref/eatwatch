@@ -1,8 +1,19 @@
 import sys
+
+from pathlib import Path
+
 from backend import Storage
 from model import *
 
+
 class MealStorage(Storage):
+
+    def __init__(self, constr):
+        super().__init__(constr)
+
+        if not Path(self.constr).is_file():
+            self.create_db()
+
 
     def add_ingredient(self, ingredient):
         return self.insert('ingredients', ingredient.dump(ignore=('id',)))

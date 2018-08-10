@@ -18,27 +18,29 @@ class MealStorage(Storage):
 
 
     def add_meal(self, meal):
-        return self.add(meal)
+        return self.insert('meals', meal.dump(ignore=('id',)))
 
 
-    def delete_meal(self, meal):
-        return self.delete(meal)
+    def delete_meal(self, *conds):
+        return self.delete('meals', conds)
 
 
-    def get_meals(self, *args):
-        return self.select(Meal.fields(), *args)
+    def get_meals(self, *conds):
+        dics = self.select('meals', Meal.fields(), conds)
+        return (Meal.load(dic) for dic in dics)
 
 
     def add_meal_ingredient(self, meal_ingredient):
-        return self.add(meal_ingredient)
+        return self.insert('meal_ingredients', meal_ingredient.dump(ignore=('id',)))
 
 
-    def delete_meal_ingredient(self, meal_ingredient):
-        return self.delete(meal_ingredient)
+    def delete_meal_ingredient(self, *conds):
+        return self.delete('meal_ingredients', conds)
 
 
-    def get_meal_ingredients(self, *args):
-        return self.get(MealIngredient, *args)
+    def get_meal_ingredients(self, *conds):
+        dics = self.select('meal_ingredients', MealIngredient.fields(), conds)
+        return (MealIngredient.load(dic) for dic in dics)
 
 
 def __main__():

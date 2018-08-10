@@ -1,7 +1,7 @@
 import unittest
 import sys
 import json
-import datetime
+from datetime import datetime
 
 sys.path.append('../')
 
@@ -56,15 +56,18 @@ class TestAddObjects(unittest.TestCase):
 
 
     def test_add_meal(self):
-        add = add_meal(meal('obiad', datetime(2001, 12, 1, 15, 45).isoformat()))
+        id_ = self.storage.add_meal(Meal(name='obiad',
+                                         date=datetime(2001, 12, 1, 15, 45)))
 
-        c = condition
-        test = next(get_meals(c('id', '=', add.id)))
+        test = next(self.storage.get_meals(eq('id', id_)))
+        self.assertEqual(test.name, 'obiad')
+        self.assertEqual(test.date, datetime(2001, 12, 1, 15, 45))
 
-        self.assertEqual('obiad', test.name)
-        self.assertEqual(add.date, datetime.strptime(test.date, "%Y-%m-%dT%H:%M:%S").isoformat())
+        none = next(self.storage.get_meals(neq('id', id_)), None)
+        self.assertIsNone(none)
 
-        none = next(get_meals(c('id', '!=', add.id)), None)
+        self.storage.delete_meal(eq('id', test.id))
+        none = next(self.storage.get_meals(eq('id', id_)), None)
         self.assertIsNone(none)
 
         return test
@@ -74,60 +77,23 @@ class TestAddObjects(unittest.TestCase):
         ingr = self.test_add_ingredient()
         meal = self.test_add_meal()
 
-        add = add_meal_ingredient(meal_ingredient(ingredient_id=ingr.id, meal_id=meal.id, quantity=87.3))
+        id_ = self.storage.add_meal_ingredient(MealIngredient(
+            meal_id=meal.id,
+            ingredient_id=ingr.id,
+            quantity=87.5
+        ))
         
-        c = condition
-        test = next(get_meal_ingredients(c('id', '=', add.id)), None)
+        test = next(self.storage.get_meal_ingredients(eq('id', id_)), None)
 
-        self.assertEqual(add.ingredient_id, test.ingredient_id)
-        self.assertEqual(add.meal_id, test.meal_id)
-        self.assertEqual(87.3, test.quantity)
+        self.assertEqual(test.ingredient_id, ingr.id)
+        self.assertEqual(test.meal_id, meal.id)
+        self.assertEqual(test.quantity, 87.5)
 
-        none = next(get_meal_ingredients(c('id', '!=', add.id)), None)
+        none = next(self.storage.get_meal_ingredients(neq('id', id_)), None)
+        self.assertIsNone(none)
+
+        self.storage.delete_meal_ingredient(eq('id', test.id))
+        none = next(self.storage.get_meal_ingredients(eq('id', id_)), None)
         self.assertIsNone(none)
 
         return test
-
-
-    def test_delete_ingredient(self):
-        to_delete = self.test_add_ingredient()
-        self.assertIsNotNone(to_delete.id)
-
-        delete_ingredient(to_delete)
-
-        c = condition
-        none = next(get_ingredients(c('id', '=', to_delete.id)), None)
-        self.assertIsNone(none)
-
-
-    def test_delete_meal(self):
-        to_delete = self.test_add_meal()
-        self.assertIsNotNone(to_delete.id)
-
-        delete_meal(to_delete)
-
-        c = condition
-        none = next(get_meals(c('id', '=', to_delete.id)), None)
-        self.assertIsNone(none)
-
-
-    def test_delete_meal_ingredient(self):
-        to_delete = self.test_add_meal_ingredient()
-        self.assertIsNotNone(to_delete.id)
-
-        delete_meal_ingredient(to_delete)
-
-        c = condition
-        none = next(get_meal_ingredients(c('id', '=', to_delete.id)), None)
-        self.assertIsNone(none)
-
-
-class TestJsonSerialization(unittest.TestCase):
-
-    def test_simple_serialization(self):
-        dumped, errors = MealSchema().dumps({"date":datetime(2017, 1, 25, 13, 40, 0), "name":"obiad" })
-        self.assertEqual(dumped, '{"name": "obiad", "date": "2017-01-25 13:40"}')
-
-        test, errors  = MealSchema().loads(dumped)
-        self.assertEqual(test.name, 'obiad')
-        self.assertEqual(test.date, datetime(2017, 1, 25, 13, 40, 0))

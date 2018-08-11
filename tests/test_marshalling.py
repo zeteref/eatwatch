@@ -134,3 +134,21 @@ class TestSimpleClassesMarshalling(unittest.TestCase):
 
         test_cls = Test.load(test_json)
         self.assertEqual(test_cls.date, datetime(2010, 11, 22, 22, 59))
+
+
+    def test_e(self):
+        due = Due(id=1, test="test", uno=[Uno(id=2, name='uno')])
+        print(due.dump())
+        import pdb; pdb.set_trace()
+
+
+class Uno(JsonObject):
+    id = fields.Int()
+    name = fields.Str()
+
+
+class Due(JsonObject):
+    id = fields.Int()
+    test = fields.Str()
+    uno = fields.List(fields.Nested(Uno._schema))
+

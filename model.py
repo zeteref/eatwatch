@@ -17,6 +17,16 @@ class Ingredient(JsonObject):
         ordered = True
 
 
+class MealIngredient(JsonObject):
+    id = fields.Int()
+    meal_id = fields.Int()
+    ingredient_id = fields.Int()
+    quantity = fields.Float()
+
+    class Meta:
+        ordered = True
+
+
 class Meal(JsonObject):
     id = fields.Int()
     name = fields.Str()
@@ -24,15 +34,7 @@ class Meal(JsonObject):
             format='%Y-%m-%d %H:%M', 
             default=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
 
-    class Meta:
-        ordered = True
-
-
-class MealIngredient(JsonObject):
-    id = fields.Int()
-    meal_id = fields.Int()
-    ingredient_id = fields.Int()
-    quantity = fields.Float()
+    meal_ingredients = fields.List(fields.Nested(MealIngredient))
 
     class Meta:
         ordered = True

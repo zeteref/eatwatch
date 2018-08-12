@@ -31,9 +31,6 @@ class Meta(type):
         schema_fields = [(k,v) for (k,v) in namespace.items() if isinstance(v, marshmallow.fields.Field)]
         namespace = dict([(k,v) for (k,v) in namespace.items() if not isinstance(v, marshmallow.fields.Field)])
 
-        if 'make_user' in namespace:
-            schema_fields.append(('make_user', namespace.pop('make_user')))
-
         new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
 
         def __init__(self, **data):
@@ -46,9 +43,10 @@ class Meta(type):
         def _make_obj(self, data):
             return new_cls(**data)
 
-        schema_fields.append(('make_obj', marshmallow.post_load(_make_obj)))
-
-        _Schema = type(name+'Schema', (marshmallow.Schema,), dict(schema_fields))
+        _Schema = type(
+                name+'Schema', 
+                (marshmallow.Schema,), 
+                dict(schema_fields + [('make_obj', marshmallow.post_load(_make_obj))]))
 
 
         def _fields():

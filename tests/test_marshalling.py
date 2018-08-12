@@ -2,7 +2,7 @@ import sys
 import json
 import unittest
 from datetime import datetime
-from meta import fields, JsonObject
+from meta import fields, JsonObject, post_load
 from model import *
 
 sys.path.append('../')
@@ -27,8 +27,7 @@ class TestSimpleMarshalling(unittest.TestCase):
 
 
     def test_loading(self, use_objects=True):
-        schema = self.schema
-        load = schema.load if use_objects else schema.loads
+        load = Test.load if use_objects else Test.loads
         prepare = lambda x: x if use_objects else json.dumps(x)
 
         ret, err = load(prepare({'email':'test'}))
@@ -136,19 +135,47 @@ class TestSimpleClassesMarshalling(unittest.TestCase):
         self.assertEqual(test_cls.date, datetime(2010, 11, 22, 22, 59))
 
 
-    def test_e(self):
-        due = Due(id=1, test="test", uno=[Uno(id=2, name='uno')])
-        print(due.dump())
-        import pdb; pdb.set_trace()
-
-
 class Uno(JsonObject):
-    id = fields.Int()
     name = fields.Str()
 
 
 class Due(JsonObject):
     id = fields.Int()
-    test = fields.Str()
-    uno = fields.List(fields.Nested(Uno._schema))
+    name = fields.Str()
+    unos = fields.List(fields.Nested(Uno))
 
+
+class TestSimpleNestedList(unittest.TestCase):
+
+    def test_simple_load_dict(self):
+        dic = {'id': 1, 'name':'due', 'unos':[{'name':'uno'}]}
+        
+        test = Due.load(dic)
+
+        self.assertEqual(test.id, 1)
+        self.assertEqual(test.name, 'due')
+        self.assertEqual(test.unos[0].name, 'uno')
+        self.assertEqual(len(test.unos), 1)
+
+        test_dic = test.dump()
+
+        self.assertEqual(test_dic, dic)
+
+
+    def test_simple_load_json(self):
+        dic = {'id': 1, 'name':'due', 'unos':[{'name':'uno'}]}
+        converted_dic = Due.dump(dic) # convert fields to json serializable (ie.: DateTime field)
+
+        text = json.dumps(converted_dic) # dump to string using standard json lib
+
+        test = Due.loads(text) # load to object using marshmallow
+
+        self.assertEqual(test.id, 1)
+        self.assertEqual(test.name, 'due')
+        self.assertEqual(test.unos[0].name, 'uno')
+        self.assertEqual(len(test.unos), 1)
+
+        test_text = test.dumps() # dump to text using marshmallow
+        test_dic = json.loads(test_text) # load text to dic with standard json lib
+
+        self.assertEqual(test_dic, converted_dic)

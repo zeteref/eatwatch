@@ -2,7 +2,7 @@ import sys
 import json
 import unittest
 from datetime import datetime
-from meta import fields, JsonObject
+from meta import fields, JsonObject, post_load
 from model import *
 
 sys.path.append('../')
@@ -134,3 +134,20 @@ class TestSimpleClassesMarshalling(unittest.TestCase):
 
         test_cls = Test.load(test_json)
         self.assertEqual(test_cls.date, datetime(2010, 11, 22, 22, 59))
+
+
+class Uno(JsonObject):
+    name = fields.Str()
+
+
+class Due(JsonObject):
+    id = fields.Int()
+    name = fields.Str()
+    unos = fields.List(fields.Nested(Uno))
+
+
+class TestPostLoad(unittest.TestCase):
+
+    def test_simple_load(self):
+        u = Due.load({'id': 1, 'name':'due', 'unos':[{'name':'uno'}]})
+        print(u)

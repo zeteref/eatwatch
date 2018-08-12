@@ -137,6 +137,8 @@ class TestSimpleClassesMarshalling(unittest.TestCase):
 
 class Uno(JsonObject):
     name = fields.Str()
+    date = fields.DateTime(
+            format='%Y-%m-%d %H:%M')
 
 
 class Due(JsonObject):
@@ -148,13 +150,14 @@ class Due(JsonObject):
 class TestSimpleNestedList(unittest.TestCase):
 
     def test_simple_load_dict(self):
-        dic = {'id': 1, 'name':'due', 'unos':[{'name':'uno'}]}
+        dic = {'id': 1, 'name':'due', 'unos':[{'name':'uno', 'date':'2010-10-30 22:15'}]}
         
         test = Due.load(dic)
 
         self.assertEqual(test.id, 1)
         self.assertEqual(test.name, 'due')
         self.assertEqual(test.unos[0].name, 'uno')
+        self.assertEqual(test.unos[0].date, datetime(2010, 10, 30, 22, 15))
         self.assertEqual(len(test.unos), 1)
 
         test_dic = test.dump()
@@ -163,10 +166,8 @@ class TestSimpleNestedList(unittest.TestCase):
 
 
     def test_simple_load_json(self):
-        dic = {'id': 1, 'name':'due', 'unos':[{'name':'uno'}]}
-        converted_dic = Due.dump(dic) # convert fields to json serializable (ie.: DateTime field)
-
-        text = json.dumps(converted_dic) # dump to string using standard json lib
+        dic = {'id': 1, 'name':'due', 'unos':[{'name':'uno', 'date':'2010-10-30 22:15'}]}
+        text = json.dumps(dic) # dump to string using standard json lib
 
         test = Due.loads(text) # load to object using marshmallow
 
@@ -178,4 +179,4 @@ class TestSimpleNestedList(unittest.TestCase):
         test_text = test.dumps() # dump to text using marshmallow
         test_dic = json.loads(test_text) # load text to dic with standard json lib
 
-        self.assertEqual(test_dic, converted_dic)
+        self.assertEqual(test_dic, dic)

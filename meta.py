@@ -15,6 +15,16 @@ def _fix_for_marshmallow_datetime_serialization(_fields):
             marshmallow.fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[_date_field.dateformat] = _strftime
 
 
+class MarshallError(Exception):
+    def __init__(self, errors, result):
+        self.errors = errors
+        self.result = result
+
+
+    def __repr__(self):
+        return "{}(errors={})".format(self.__class__.__name__, self.errors)
+
+
 class Meta(type):
     def __new__(mcs, name, bases, namespace, **kwargs):
         _fix_for_marshmallow_datetime_serialization(namespace)
@@ -49,6 +59,9 @@ class Meta(type):
 
         def loads(data):
             obj, err = _Schema().loads(data)
+            if err: 
+                raise MarshallError(err, result=obj)
+
             return obj
         
 
@@ -59,11 +72,15 @@ class Meta(type):
                 return loads(data)
 
             obj, err = _Schema().load(data)
+            if err: 
+                raise MarshallError(err, result=obj)
             return obj
 
 
         def dump(self, ignore=None):
             ret, err = _Schema().dump(self)
+            if err: 
+                raise MarshallError(err, result=ret)
 
             if ignore is not None:
                 for key in ignore:
@@ -75,6 +92,8 @@ class Meta(type):
 
         def dumps(self):
             ret, err = _Schema().dumps(self)
+            if err: 
+                raise MarshallError(err, result=ret)
             return ret
 
 

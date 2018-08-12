@@ -2,7 +2,7 @@ import sys
 import json
 import unittest
 from datetime import datetime
-from meta import fields, JsonObject, post_load
+from meta import fields, JsonObject, post_load, MarshallError
 from model import *
 
 sys.path.append('../')
@@ -22,28 +22,21 @@ class Test(JsonObject):
 
 class TestSimpleMarshalling(unittest.TestCase):
 
-    def setUp(self):
-        self.schema = Test._schema()
-
 
     def test_loading(self, use_objects=True):
         load = Test.load if use_objects else Test.loads
         prepare = lambda x: x if use_objects else json.dumps(x)
 
-        ret, err = load(prepare({'email':'test'}))
-        self.assertIn('email', err)
+        self.assertRaises(MarshallError, lambda: load(prepare({'email':'test'})))
 
-        ret, err = load(prepare({'email':'test@test.com'}))
-        self.assertEqual(ret['email'], 'test@test.com')
-        self.assertEqual(err, {})
+        ret = load(prepare({'email':'test@test.com'}))
+        self.assertEqual(ret.email, 'test@test.com')
 
 
-        ret, err = load(prepare({'date':'2010-10-20 23:59'}))
-        self.assertEqual(ret['date'], datetime(2010, 10, 20, 23, 59))
-        self.assertEqual(err, {})
+        ret = load(prepare({'date':'2010-10-20 23:59'}))
+        self.assertEqual(ret.date, datetime(2010, 10, 20, 23, 59))
 
-        ret, err = load(prepare({'date':'2010-10-2023:59'}))
-        self.assertIn('date', err)
+        self.assertRaises(MarshallError, lambda: load(prepare({'date':'2010-10-2023:59'})))
 
 
     def test_object_loading(self):
@@ -55,29 +48,18 @@ class TestSimpleMarshalling(unittest.TestCase):
 
 
     def test_dumping(self, use_objects=True):
-        schema = self.schema
-        dump = schema.dump if use_objects else schema.dumps
+        dump = Test.dump if use_objects else Test.dumps
         prepare = lambda x: x if use_objects else json.loads(x)
 
-        ret, err = dump({'email':'test'})
-        self.assertIn('email', err)
-        err.pop('email')
-        self.assertEqual(err, {})
+        self.assertRaises(MarshallError, lambda: dump({'email':'test'}))
 
-        ret, err = dump({'email':'test@test.com'})
+        ret = dump({'email':'test@test.com'})
         ret = prepare(ret)
         self.assertEqual(ret['email'], 'test@test.com')
-        self.assertEqual(err, {})
 
-        ret, err = dump({'date': datetime(2010, 10, 20, 23, 59)})
+        ret = dump({'date': datetime(2010, 10, 20, 23, 59)})
         ret = prepare(ret)
         self.assertEqual(ret['date'], '2010-10-20 23:59')
-        self.assertEqual(err, {})
-
-        ret, err = schema.dump({'date': '2010-10-20 23:59'})
-        self.assertIn('date', err)
-        err.pop('date')
-        self.assertEqual(err, {})
 
 
     def test_object_dumping(self):

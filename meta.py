@@ -142,8 +142,8 @@ class JsonObject(metaclass=Meta):
 class Fields():
     def __getattr__(self, name):
         class Nested(marshmallow.fields.Nested):
-            def __init__(self, jsonobj):
-                return super().__init__(jsonobj._schema)
+            def __init__(self, jsonobj, **kwds):
+                return super().__init__(jsonobj._schema, **kwds)
 
         if name == 'Nested':
             return Nested

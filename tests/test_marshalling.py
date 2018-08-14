@@ -26,8 +26,6 @@ class ParamsHolder(JsonObject):
 class TestSimpleMarshalling(unittest.TestCase):
 
     def test_default(self):
-        ph = ParamsHolder()
-
         ph = ParamsHolder.load('{}')
         self.assertEqual(ph.params, [])
 

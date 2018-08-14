@@ -16,7 +16,13 @@ class MealStorage(Storage):
 
 
     def add_ingredient(self, ingredient):
-        return self.insert('ingredients', ingredient.dump(ignore=('id',)))
+        id_ = self.insert('ingredients', ingredient.dump(ignore=('id',)))
+        ingredient.id = id_
+        return ingredient
+
+
+    def add_ingredients(self, ingredients):
+        return [self.add_ingredient(x) for x in ingredients]
 
 
     def delete_ingredient(self, *conds):

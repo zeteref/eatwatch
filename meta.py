@@ -45,6 +45,8 @@ class Meta(type):
         schema_fields = [(k,v) for (k,v) in namespace.items() if isinstance(v, marshmallow.fields.Field)]
         namespace = dict([(k,v) for (k,v) in namespace.items() if not isinstance(v, marshmallow.fields.Field)])
 
+        defaults = [(k,v) for (k,v) in schema_fields if v.missing is not marshmallow.missing]
+
         new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
 
         def __init__(self, **data):
@@ -55,8 +57,12 @@ class Meta(type):
             if diff:
                 raise InvalidFieldsError('Unknown fields: {}', list(diff))
 
+            for default in defaults:
+                setattr(self, default[0], default[1].missing)
+
             for k,v in data.items():
                 setattr(self, k, v)
+
 
         setattr(new_cls, '__init__', __init__)
 

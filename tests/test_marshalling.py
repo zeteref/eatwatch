@@ -19,8 +19,21 @@ class Test(JsonObject):
     class Meta:
         ordered = True
 
+class ParamsHolder(JsonObject):
+    params = fields.List(fields.Str(), missing=[])
+
 
 class TestSimpleMarshalling(unittest.TestCase):
+
+    def test_default(self):
+        ph = ParamsHolder()
+
+        ph = ParamsHolder.load('{}')
+        self.assertEqual(ph.params, [])
+
+        ph = ParamsHolder()
+        self.assertEqual(ph.params, [])
+
 
     def test_invalid_fields(self):
         self.assertRaises(InvalidFieldsError, lambda: Test(invalid=True, error=False))

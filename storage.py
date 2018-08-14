@@ -24,7 +24,7 @@ class MealStorage(Storage):
 
 
     def get_ingredients(self, *conds):
-        dics = self.select('ingredients', Ingredient.fields(), conds)
+        dics = self.select('ingredients', Ingredient.columns(), conds)
         return (Ingredient.load(dic) for dic in dics)
 
 
@@ -37,7 +37,7 @@ class MealStorage(Storage):
 
 
     def get_meals(self, *conds):
-        dics = self.select('meals', Meal.fields(), conds)
+        dics = self.select('meals', Meal.columns(), conds)
         return (Meal.load(dic) for dic in dics)
 
 
@@ -50,7 +50,7 @@ class MealStorage(Storage):
 
 
     def get_meal_ingredients(self, *conds):
-        dics = self.select('meal_ingredients', MealIngredient.fields(), conds)
+        dics = self.select('meal_ingredients', MealIngredient.columns(), conds)
         return (MealIngredient.load(dic) for dic in dics)
 
 

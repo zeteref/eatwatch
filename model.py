@@ -17,6 +17,10 @@ class Ingredient(JsonObject):
         ordered = True
 
 
+    def columns():
+        return Ingredient.fields()
+
+
 class MealIngredient(JsonObject):
     id = fields.Int()
     meal_id = fields.Int()
@@ -25,6 +29,10 @@ class MealIngredient(JsonObject):
 
     class Meta:
         ordered = True
+
+
+    def columns():
+        return MealIngredient.fields()
 
 
 class Meal(JsonObject):
@@ -36,5 +44,10 @@ class Meal(JsonObject):
 
     meal_ingredients = fields.List(fields.Nested(MealIngredient))
 
+
     class Meta:
         ordered = True
+
+
+    def columns():
+        return [x for x in Meal.fields() if x != 'meal_ingredients']

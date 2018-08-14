@@ -144,12 +144,39 @@ class TestAddNestedObjects(unittest.TestCase):
             MealIngredient(ingredient=ingredients[2], quantity=20)
         ])
 
+        test_mi = list(self.storage.get_meal_ingredients())
+        self.assertEqual(len(test_mi), 0)
+
+        test_i = list(self.storage.get_ingredients())
+        self.assertEqual(len(test_i), 0)
+
+        test_m = list(self.storage.get_meals())
+        self.assertEqual(len(test_i), 0)
+        
         self.storage.add_meal(meal)
+
+        test_mi = list(self.storage.get_meal_ingredients())
+        self.assertEqual(len(test_mi), 3)
+
+        test_i = list(self.storage.get_ingredients())
+        self.assertEqual(len(test_i), 3)
+
+        test_m = list(self.storage.get_meals())
+        self.assertEqual(len(test_m), 1)
         
 
     def test_add_meal_with_existing_ingredients(self):
         ingredients = self.create_some_ingredients()
         ingredients = self.storage.add_ingredients(ingredients)
+
+        test_mi = list(self.storage.get_meal_ingredients())
+        self.assertEqual(len(test_mi), 0)
+
+        test_i = list(self.storage.get_ingredients())
+        self.assertEqual(len(test_i), 3)
+
+        test_m = list(self.storage.get_meals())
+        self.assertEqual(len(test_m), 0)
 
         meal = Meal(name='śniadanie', date=today_at('9:00'), meal_ingredients=[
             MealIngredient(ingredient=ingredients[0], quantity=60),
@@ -158,3 +185,13 @@ class TestAddNestedObjects(unittest.TestCase):
         ])
 
         self.storage.add_meal(meal)
+
+
+        test_mi = list(self.storage.get_meal_ingredients())
+        self.assertEqual(len(test_mi), 3)
+
+        test_i = list(self.storage.get_ingredients())
+        self.assertEqual(len(test_i), 3)
+
+        test_m = list(self.storage.get_meals())
+        self.assertEqual(len(test_m), 1)

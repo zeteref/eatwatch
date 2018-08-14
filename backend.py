@@ -55,6 +55,7 @@ class Storage(object):
                         id INTEGER PRIMARY KEY,
                         name TEXT,
                         calories FLOAT DEFAULT 0 NOT NULL,
+                        fats FLOAT DEFAULT 0 NOT NULL,
                         sugar FLOAT DEFAULT 0 NOT NULL,
                         veg_protein FLOAT DEFAULT 0 NOT NULL,
                         protein FLOAT DEFAULT 0 NOT NULL,

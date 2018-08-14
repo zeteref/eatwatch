@@ -15,6 +15,20 @@ def _fix_for_marshmallow_datetime_serialization(_fields):
             marshmallow.fields.DateTime.DATEFORMAT_SERIALIZATION_FUNCS[_date_field.dateformat] = _strftime
 
 
+class InvalidFieldsError(Exception):
+    def __init__(self, msg, fields):
+        self.msg = msg
+        self.fields = fields
+
+
+    def __repr__(self):
+        return self.msg.format(self.fields)
+
+
+    def __str__(self):
+        return self.__repr__()
+
+
 class MarshallError(Exception):
     def __init__(self, errors, result):
         self.errors = errors
@@ -34,6 +48,13 @@ class Meta(type):
         new_cls = super(Meta, mcs).__new__(mcs, name, bases, namespace, **kwargs)
 
         def __init__(self, **data):
+            keys = set(data.keys())
+            valid_keys = set([k for (k,v) in schema_fields])
+
+            diff = keys.difference(valid_keys)
+            if diff:
+                raise InvalidFieldsError('Unknown fields: {}', list(diff))
+
             for k,v in data.items():
                 setattr(self, k, v)
 

@@ -2,7 +2,7 @@ import sys
 import json
 import unittest
 from datetime import datetime
-from meta import fields, JsonObject, post_load, MarshallError
+from meta import fields, JsonObject, post_load, MarshallError, InvalidFieldsError
 from model import *
 
 sys.path.append('../')
@@ -21,6 +21,17 @@ class Test(JsonObject):
 
 
 class TestSimpleMarshalling(unittest.TestCase):
+
+    def test_invalid_fields(self):
+        self.assertRaises(InvalidFieldsError, lambda: Test(invalid=True, error=False))
+
+        try:
+            Test(invalid=True, error=False)
+        except InvalidFieldsError as e:
+            self.assertIn('invalid', e.fields)
+            self.assertIn('error', e.fields)
+            self.assertEqual(len(e.fields), 2)
+
 
 
     def test_loading(self, use_objects=True):

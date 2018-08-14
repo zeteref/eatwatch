@@ -8,6 +8,7 @@ sys.path.append('../')
 from model import *
 from storage import MealStorage
 from conditions import *
+from utils import today_at
 
 class TestAddObjects(unittest.TestCase):
 
@@ -97,3 +98,46 @@ class TestAddObjects(unittest.TestCase):
         self.assertIsNone(none)
 
         return test
+
+class TestAddNestedObjects(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.storage = MealStorage('example.db')
+        cls.storage.drop_db()
+        cls.storage.create_db()
+
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.storage.clear_db()
+
+
+    def setUp(self):
+        self.storage.clear_db()
+
+
+    def get_some_ingredients(self):
+        ret = []
+        ret.extend([
+            Ingredient(name='jajka', calories=139, protein=12.5, carbo=0.6, fats=9.7),
+            Ingredient(name='łosoś wędzony', calories=162, protein=21.5, carbo=0.6, fats=18.1),
+            Ingredient(name='avocado', calories=160, veg_protein=2.0, carbo=8.5, fats=14.7)])
+        return ret
+
+
+    def test_add_meal_with_new_ingredients(self):
+        ingredients = self.get_some_ingredients()
+
+        meal = Meal(name='śniadanie', date=today_at('9:00'), meal_ingredients=[
+            MealIngredient(ingredient=ingredients[0], quantity=60),
+            MealIngredient(ingredient=ingredients[1], quantity=15),
+            MealIngredient(ingredient=ingredients[2], quantity=20)
+        ])
+
+        self.storage.add_meal(meal)
+        
+
+    def test_add_meal_with_existing_ingredients(self):
+        passk
+

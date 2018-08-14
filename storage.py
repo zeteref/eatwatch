@@ -29,7 +29,7 @@ class MealStorage(Storage):
 
 
     def add_meal(self, meal):
-        return self.insert('meals', meal.dump(ignore=('id',)))
+        return self.insert('meals', meal.dump(ignore=('id', 'meal_ingredients')))
 
 
     def delete_meal(self, *conds):

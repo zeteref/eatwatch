@@ -1,7 +1,6 @@
 from datetime import datetime
 from meta import JsonObject, fields
 
-
 __all__ = ['Ingredient', 'Meal', 'MealIngredient']
 
 class Ingredient(JsonObject):
@@ -12,6 +11,7 @@ class Ingredient(JsonObject):
     veg_protein = fields.Float()
     protein = fields.Float()
     carbo = fields.Float()
+    fats = fields.Float()
 
     class Meta:
         ordered = True
@@ -27,12 +27,14 @@ class MealIngredient(JsonObject):
     ingredient_id = fields.Int()
     quantity = fields.Float()
 
+    ingredient = fields.Nested(Ingredient)
+
     class Meta:
         ordered = True
 
-
     def columns():
-        return MealIngredient.fields()
+        return [x for x in MealIngredient.fields() 
+            if x not in ('ingredient',)]
 
 
 class Meal(JsonObject):
@@ -50,4 +52,5 @@ class Meal(JsonObject):
 
 
     def columns():
-        return [x for x in Meal.fields() if x != 'meal_ingredients']
+        return [x for x in Meal.fields() 
+            if x not in ('meal_ingredients',)]

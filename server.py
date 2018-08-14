@@ -21,12 +21,50 @@ from conditions import *
 
 class MealsController(object):
     def __init__(self):
-        self.storage = MealStorage('example.db')
+        self.storage = MealStorage('e.db')
+
+    # INGREDIENTS
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.accept(media='application/json')
+    def get_ingredients(self):
+        """
+        Handler for /meals (GET)
+        """
+
+        return [x.dump() for x in self.storage.get_ingredients()]
+
+
+    @cherrypy.tools.json_out()
+    def get_ingredient(self, id):
+        """
+        Handler for /ingredients/<id> (GET)
+        """
+        ret = next(self.storage.get_ingredients(eq('id', id)), None)
+
+        if ret is None:
+            raise cherrypy.HTTPError(404, 'Ingredient id:\"{0}\" not found'.format(id))
+
+        return ret.dump()
+
+    # MEAL INGREDIENTS
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.accept(media='application/json')
+    def get_meal_ingredients(self):
+        """
+        Handler for /meal_ingredients (GET)
+        """
+
+        return [x.dump() for x in self.storage.get_meal_ingredients()]
+
+
+    # MEALS
 
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')
-    def get_all(self):
+    def get_meals(self):
         """
         Handler for /meals (GET)
         """
@@ -35,16 +73,16 @@ class MealsController(object):
 
 
     @cherrypy.tools.json_out()
-    def get(self, name):
+    def get_meal(self, id):
         """
         Handler for /meals/<name> (GET)
         """
+        ret = next(self.storage.get_meals(eq('id', id)), None)
 
-        if name not in sample_nodes:
-            raise cherrypy.HTTPError(
-                404, 'Node \"{0}\" not found'.format(name))
+        if ret is None:
+            raise cherrypy.HTTPError(404, 'Meal id:\"{0}\" not found'.format(id))
 
-        return [{'name': name}]
+        return ret.dump()
 
 
     @cherrypy.tools.json_in()
@@ -137,16 +175,16 @@ if __name__ == '__main__':
     # /meals (GET)
     dispatcher.connect(name='meals',
                        route='/meals',
-                       action='get_all',
+                       action='get_meals',
                        controller=MealsController(),
                        conditions={'method': ['GET']})
 
-    # /nodes/{name} (GET)
+    # /meals/{id} (GET)
     #
     # Request "/nodes/notfound" (GET) to test the 404 (not found) handler
-    dispatcher.connect(name='nodes',
-                       route='/nodes/{name}',
-                       action='get',
+    dispatcher.connect(name='meals',
+                       route='/meals/{id}',
+                       action='get_meal',
                        controller=MealsController(),
                        conditions={'method': ['GET']})
 
@@ -170,6 +208,30 @@ if __name__ == '__main__':
                        action='delete_node',
                        controller=MealsController(),
                        conditions={'method': ['DELETE']})
+
+
+    # INGREDIETNS
+    dispatcher.connect(name='ingredients',
+                       route='/ingredients',
+                       action='get_ingredients',
+                       controller=MealsController(),
+                       conditions={'method': ['GET']})
+
+
+    dispatcher.connect(name='ingredients',
+                       route='/ingredients/{id}',
+                       action='get_ingredient',
+                       controller=MealsController(),
+                       conditions={'method': ['GET']})
+
+
+    # MEAL INGREDIENTS
+    dispatcher.connect(name='meal_ingredients',
+                       route='/meal_ingredients',
+                       action='get_meal_ingredients',
+                       controller=MealsController(),
+                       conditions={'method': ['GET']})
+
 
     config = {
         'global': {

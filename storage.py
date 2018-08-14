@@ -35,7 +35,11 @@ class MealStorage(Storage):
 
 
     def add_meal(self, meal):
-        return self.insert('meals', meal.dump(ignore=('id', 'meal_ingredients')))
+        meal = self.insert('meals', meal.dump(ignore=('id', 'meal_ingredients')))
+
+        for mi in meal.meal_ingredients:
+            mi.meal_id = meal.id
+            self.add_meal_ingredient(mi) # TODO: this can be done with batch insert
 
 
     def delete_meal(self, *conds):
@@ -48,7 +52,13 @@ class MealStorage(Storage):
 
 
     def add_meal_ingredient(self, meal_ingredient):
-        return self.insert('meal_ingredients', meal_ingredient.dump(ignore=('id',)))
+        ing = meal_ingredient.ingredient
+
+        if ing is not None and not hasattr(ing, 'id'):
+            ing = self.add_meal_ingredient(ing)
+            meal_ingredient.ingredient_id = ing.id
+            
+        return self.insert('meal_ingredients', meal_ingredient.dump(ignore=('id', 'ingredient')))
 
 
     def delete_meal_ingredient(self, *conds):

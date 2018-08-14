@@ -143,7 +143,7 @@ class TestAddNestedObjects(unittest.TestCase):
             MealIngredient(ingredient=ingredients[2], quantity=20)
         ])
 
-        #self.storage.add_meal(meal)
+        self.storage.add_meal(meal)
         
 
     def test_add_meal_with_existing_ingredients(self):

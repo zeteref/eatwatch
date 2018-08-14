@@ -27,7 +27,7 @@ class MealIngredient(JsonObject):
     ingredient_id = fields.Int()
     quantity = fields.Float()
 
-    ingredient = fields.Nested(Ingredient)
+    ingredient = fields.Nested(Ingredient, missing=None)
 
     class Meta:
         ordered = True
@@ -44,7 +44,7 @@ class Meal(JsonObject):
             format='%Y-%m-%d %H:%M', 
             default=lambda: datetime.now().strftime('%Y-%m-%d %H:%M'))
 
-    meal_ingredients = fields.List(fields.Nested(MealIngredient))
+    meal_ingredients = fields.List(fields.Nested(MealIngredient), missing=[])
 
 
     class Meta:

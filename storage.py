@@ -57,11 +57,16 @@ class MealStorage(Storage):
     def add_meal_ingredient(self, meal_ingredient):
         ing = meal_ingredient.ingredient
 
-        if ing is not None and not hasattr(ing, 'id'):
-            ing = self.add_ingredient(ing)
+        if ing is not None:
+            if not hasattr(ing, 'id'):
+                ing = self.add_ingredient(ing)
+            meal_ingredient.ingredient_id = ing.id
 
-        meal_ingredient.ingredient_id = ing.id
-        return self.insert('meal_ingredients', meal_ingredient.dump(ignore=('id', 'ingredient')))
+        id_ = self.insert('meal_ingredients', meal_ingredient.dump(ignore=('id', 'ingredient')))
+        meal_ingredient.id = id_
+
+        return meal_ingredient
+
 
 
     def delete_meal_ingredient(self, *conds):

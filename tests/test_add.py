@@ -57,18 +57,19 @@ class TestAddObjects(unittest.TestCase):
 
 
     def test_add_meal(self):
-        id_ = self.storage.add_meal(Meal(name='obiad',
-                                         date=datetime(2001, 12, 1, 15, 45)))
+        added = self.storage.add_meal(Meal(
+            name='obiad',
+            date=datetime(2001, 12, 1, 15, 45)))
 
-        test = next(self.storage.get_meals(eq('id', id_)))
+        test = next(self.storage.get_meals(eq('id', added.id)))
         self.assertEqual(test.name, 'obiad')
         self.assertEqual(test.date, datetime(2001, 12, 1, 15, 45))
 
-        none = next(self.storage.get_meals(neq('id', id_)), None)
+        none = next(self.storage.get_meals(neq('id', added.id)), None)
         self.assertIsNone(none)
 
         self.storage.delete_meal(eq('id', test.id))
-        none = next(self.storage.get_meals(eq('id', id_)), None)
+        none = next(self.storage.get_meals(eq('id', added.id)), None)
         self.assertIsNone(none)
 
         return test
@@ -78,23 +79,23 @@ class TestAddObjects(unittest.TestCase):
         ingr = self.test_add_ingredient()
         meal = self.test_add_meal()
 
-        id_ = self.storage.add_meal_ingredient(MealIngredient(
+        meal_ingredient = self.storage.add_meal_ingredient(MealIngredient(
             meal_id=meal.id,
             ingredient_id=ingr.id,
             quantity=87.5
         ))
         
-        test = next(self.storage.get_meal_ingredients(eq('id', id_)), None)
+        test = next(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)), None)
 
         self.assertEqual(test.ingredient_id, ingr.id)
         self.assertEqual(test.meal_id, meal.id)
         self.assertEqual(test.quantity, 87.5)
 
-        none = next(self.storage.get_meal_ingredients(neq('id', id_)), None)
+        none = next(self.storage.get_meal_ingredients(neq('id', meal_ingredient.id)), None)
         self.assertIsNone(none)
 
         self.storage.delete_meal_ingredient(eq('id', test.id))
-        none = next(self.storage.get_meal_ingredients(eq('id', id_)), None)
+        none = next(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)), None)
         self.assertIsNone(none)
 
         return test
@@ -117,7 +118,7 @@ class TestAddNestedObjects(unittest.TestCase):
         self.storage.clear_db()
 
 
-    def get_some_ingredients(self):
+    def create_some_ingredients(self):
         ret = []
         ret.extend([
             Ingredient(name='jajka', calories=139, protein=12.5, carbo=0.6, fats=9.7),
@@ -127,7 +128,7 @@ class TestAddNestedObjects(unittest.TestCase):
 
 
     def test_add_ingredients(self):
-        ingredients = self.get_some_ingredients()
+        ingredients = self.create_some_ingredients()
         ret = self.storage.add_ingredients(ingredients)
 
         for ingr in ret:
@@ -135,7 +136,7 @@ class TestAddNestedObjects(unittest.TestCase):
 
 
     def test_add_meal_with_new_ingredients(self):
-        ingredients = self.get_some_ingredients()
+        ingredients = self.create_some_ingredients()
 
         meal = Meal(name='śniadanie', date=today_at('9:00'), meal_ingredients=[
             MealIngredient(ingredient=ingredients[0], quantity=60),
@@ -147,7 +148,7 @@ class TestAddNestedObjects(unittest.TestCase):
         
 
     def test_add_meal_with_existing_ingredients(self):
-        ingredients = self.get_some_ingredients()
+        ingredients = self.create_some_ingredients()
         ingredients = self.storage.add_ingredients(ingredients)
 
         meal = Meal(name='śniadanie', date=today_at('9:00'), meal_ingredients=[

@@ -147,4 +147,13 @@ class TestAddNestedObjects(unittest.TestCase):
         
 
     def test_add_meal_with_existing_ingredients(self):
-        pass
+        ingredients = self.get_some_ingredients()
+        ingredients = self.storage.add_ingredients(ingredients)
+
+        meal = Meal(name='śniadanie', date=today_at('9:00'), meal_ingredients=[
+            MealIngredient(ingredient=ingredients[0], quantity=60),
+            MealIngredient(ingredient=ingredients[1], quantity=15),
+            MealIngredient(ingredient=ingredients[2], quantity=20)
+        ])
+
+        self.storage.add_meal(meal)

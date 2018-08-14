@@ -22,7 +22,7 @@ class MealStorage(Storage):
 
 
     def add_ingredients(self, ingredients):
-        return [self.add_ingredient(x) for x in ingredients]
+        return [self.add_ingredient(x) for x in ingredients if not hasattr(x,'id')]
 
 
     def delete_ingredient(self, *conds):
@@ -40,7 +40,7 @@ class MealStorage(Storage):
 
         for mi in meal.meal_ingredients:
             mi.meal_id = meal.id
-            self.add_meal_ingredient(mi) # TODO: this can be done with batch insert
+            self.add_meal_ingredient(mi)
 
         return meal
 
@@ -59,8 +59,8 @@ class MealStorage(Storage):
 
         if ing is not None and not hasattr(ing, 'id'):
             ing = self.add_ingredient(ing)
-            meal_ingredient.ingredient_id = ing.id
-            
+
+        meal_ingredient.ingredient_id = ing.id
         return self.insert('meal_ingredients', meal_ingredient.dump(ignore=('id', 'ingredient')))
 
 

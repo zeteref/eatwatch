@@ -4,6 +4,8 @@ from pathlib import Path
 
 from backend import Storage
 from model import *
+from conditions import *
+from utils import extract, first
 
 
 class MealStorage(Storage):
@@ -31,7 +33,11 @@ class MealStorage(Storage):
 
     def get_ingredients(self, *conds):
         dics = self.select('ingredients', Ingredient.columns(), conds)
-        return (Ingredient.load(dic) for dic in dics)
+        return [Ingredient.load(dic) for dic in dics]
+
+
+    def get_ingredient(self, id):
+        return first(self.get_ingredients(eq('id', id)))
 
 
     def add_meal(self, meal):
@@ -51,7 +57,11 @@ class MealStorage(Storage):
 
     def get_meals(self, *conds):
         dics = self.select('meals', Meal.columns(), conds)
-        return (Meal.load(dic) for dic in dics)
+        return [Meal.load(dic) for dic in dics]
+
+
+    def get_meal(self, id):
+        return first(self.get_meals(eq('id', id)))
 
 
     def add_meal_ingredient(self, meal_ingredient):
@@ -75,7 +85,7 @@ class MealStorage(Storage):
 
     def get_meal_ingredients(self, *conds):
         dics = self.select('meal_ingredients', MealIngredient.columns(), conds)
-        return (MealIngredient.load(dic) for dic in dics)
+        return [MealIngredient.load(dic) for dic in dics]
 
 
 def __main__():

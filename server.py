@@ -18,6 +18,7 @@ from marshmallow import Schema, fields
 from storage import MealStorage
 from model import *
 from conditions import *
+from utils import first 
 
 class MealsController(object):
     def __init__(self):
@@ -40,7 +41,7 @@ class MealsController(object):
         """
         Handler for /ingredients/<id> (GET)
         """
-        ret = next(self.storage.get_ingredients(eq('id', id)), None)
+        ret = first(self.storage.get_ingredients(eq('id', id)))
 
         if ret is None:
             raise cherrypy.HTTPError(404, 'Ingredient id:\"{0}\" not found'.format(id))
@@ -51,12 +52,13 @@ class MealsController(object):
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')
-    def get_meal_ingredients(self):
+    def get_meal_ingredients(self, meal_id):
         """
         Handler for /meal_ingredients (GET)
         """
 
-        return [x.dump() for x in self.storage.get_meal_ingredients()]
+        meal_ingredients = self.storage.get_meal_ingredients(eq('meal_id', meal_id))
+        return [x.dump() for x in meal_ingredients]
 
 
     # MEALS
@@ -77,8 +79,7 @@ class MealsController(object):
         """
         Handler for /meals/<name> (GET)
         """
-        ret = next(self.storage.get_meals(eq('id', id)), None)
-
+        ret = self.storage.get_meal(id)
         if ret is None:
             raise cherrypy.HTTPError(404, 'Meal id:\"{0}\" not found'.format(id))
 
@@ -188,6 +189,13 @@ if __name__ == '__main__':
                        controller=MealsController(),
                        conditions={'method': ['GET']})
 
+
+    dispatcher.connect(name='meals',
+                       route='/meals/{meal_id}/ingredients',
+                       action='get_meal_ingredients',
+                       controller=MealsController(),
+                       conditions={'method': ['GET']})
+
     # /nodes/{name} (POST)
     dispatcher.connect(name='meals',
                        route='/meals',
@@ -226,11 +234,6 @@ if __name__ == '__main__':
 
 
     # MEAL INGREDIENTS
-    dispatcher.connect(name='meal_ingredients',
-                       route='/meal_ingredients',
-                       action='get_meal_ingredients',
-                       controller=MealsController(),
-                       conditions={'method': ['GET']})
 
 
     config = {

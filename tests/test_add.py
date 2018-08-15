@@ -8,7 +8,7 @@ sys.path.append('../')
 from model import *
 from storage import MealStorage
 from conditions import *
-from utils import today_at
+from utils import first, extract, today_at
 
 class TestAddObjects(unittest.TestCase):
 
@@ -37,7 +37,7 @@ class TestAddObjects(unittest.TestCase):
             protein=4.4,
             carbo=5.5))
 
-        test = next(self.storage.get_ingredients(eq('id', added.id)), None)
+        test = first(self.storage.get_ingredients(eq('id', added.id)))
 
         self.assertEqual(test.id, added.id)
         self.assertEqual(test.calories, 1.1)
@@ -46,11 +46,11 @@ class TestAddObjects(unittest.TestCase):
         self.assertEqual(test.protein, 4.4)
         self.assertEqual(test.carbo, 5.5)
 
-        none = next(self.storage.get_ingredients(neq('id', added.id)), None)
+        none = first(self.storage.get_ingredients(neq('id', added.id)))
         self.assertIsNone(none)
 
         self.storage.delete_ingredient(eq('id', added.id))
-        none = next(self.storage.get_ingredients(eq('id', added.id)), None)
+        none = first(self.storage.get_ingredients(eq('id', added.id)))
         self.assertIsNone(none)
 
         return test
@@ -61,15 +61,15 @@ class TestAddObjects(unittest.TestCase):
             name='obiad',
             date=datetime(2001, 12, 1, 15, 45)))
 
-        test = next(self.storage.get_meals(eq('id', added.id)))
+        test = first(self.storage.get_meals(eq('id', added.id)))
         self.assertEqual(test.name, 'obiad')
         self.assertEqual(test.date, datetime(2001, 12, 1, 15, 45))
 
-        none = next(self.storage.get_meals(neq('id', added.id)), None)
+        none = first(self.storage.get_meals(neq('id', added.id)))
         self.assertIsNone(none)
 
         self.storage.delete_meal(eq('id', test.id))
-        none = next(self.storage.get_meals(eq('id', added.id)), None)
+        none = first(self.storage.get_meals(eq('id', added.id)))
         self.assertIsNone(none)
 
         return test
@@ -85,17 +85,17 @@ class TestAddObjects(unittest.TestCase):
             quantity=87.5
         ))
         
-        test = next(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)), None)
+        test = first(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)))
 
         self.assertEqual(test.ingredient_id, ingr.id)
         self.assertEqual(test.meal_id, meal.id)
         self.assertEqual(test.quantity, 87.5)
 
-        none = next(self.storage.get_meal_ingredients(neq('id', meal_ingredient.id)), None)
+        none = first(self.storage.get_meal_ingredients(neq('id', meal_ingredient.id)))
         self.assertIsNone(none)
 
         self.storage.delete_meal_ingredient(eq('id', test.id))
-        none = next(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)), None)
+        none = first(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)))
         self.assertIsNone(none)
 
         return test

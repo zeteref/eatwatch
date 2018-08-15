@@ -54,15 +54,17 @@ class MealsController(object):
     @cherrypy.tools.accept(media='application/json')
     def get_meal_ingredients(self, meal_id):
         """
-        Handler for /meal_ingredients (GET)
+        Handler for /meals/<meal_id>/ingredients (GET)
         """
 
         meal_ingredients = self.storage.get_meal_ingredients(eq('meal_id', meal_id))
+        for mi in meal_ingredients:
+            mi.ingredient = self.storage.get_ingredient(mi.ingredient_id)
+
         return [x.dump() for x in meal_ingredients]
 
 
     # MEALS
-
 
     @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')

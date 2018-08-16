@@ -144,6 +144,14 @@ class MealsController(object):
         return ''
 
 
+    @cherrypy.tools.json_out()
+    def search(self, q, **kwds):
+        table = q
+        conditions = [like(key, '%'+value+'%') for (key, value) in kwds.items() if key in Meal.columns()]
+        
+        return [x.dump() for x in self.storage.get_meals(*conditions)]
+
+
 def jsonify_error(status, message, traceback, version):
     """JSONify all CherryPy error responses (created by raising the
     cherrypy.HTTPError exception)
@@ -237,6 +245,12 @@ if __name__ == '__main__':
 
     # MEAL INGREDIENTS
 
+
+    dispatcher.connect(name='search',
+                       route='/search',
+                       action='search',
+                       controller=MealsController(),
+                       conditions={'method': ['GET']})
 
     config = {
         'global': {

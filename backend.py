@@ -15,6 +15,7 @@ def _keysvalues(dic):
     kv = namedtuple('keysvalues', ['keys', 'values'])
     return kv(tuple(x[0] for x in items), tuple(x[1] for x in items))
 
+prep = namedtuple('prep_stmt', ['sql', 'bind'])
 
 class Storage(object):
 
@@ -105,7 +106,7 @@ class Storage(object):
             cur_columns = [x[0] for x in cursor.description]         
             return (dict(zip(cur_columns, val)) for val in cursor.fetchall())
 
-        return ('\n'.join(sql), bind, result)
+        return prep('\n'.join(sql), bind, result)
 
 
     def select(self, table, columns, conds):
@@ -116,7 +117,7 @@ class Storage(object):
         columns, bind = _keysvalues(dic)
         sql = 'INSERT INTO {}({}) VALUES({})'.format(table, ', '.join(columns), ', '.join('?' * len(columns)))
     
-        return ('\n'.join(sql), bind, lambda x: x.lastrowid)
+        return prep('\n'.join(sql), bind, lambda x: x.lastrowid)
 
 
     def insert(self, table, dic):
@@ -130,7 +131,7 @@ class Storage(object):
             sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
         bind = tuple(cond.rval for cond in conds)
 
-        return ('\n'.join(sql), bind)
+        return prep('\n'.join(sql), bind)
 
 
     def delete(self, table, conds):
@@ -148,7 +149,7 @@ class Storage(object):
 
         bind = bind + tuple(cond.rval for cond in conds)
 
-        return ('\n'.join(sql), bind)
+        return prep('\n'.join(sql), bind)
 
 
     def update(self, table, dic, conds):

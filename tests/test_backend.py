@@ -1,0 +1,19 @@
+import sys
+import unittest
+
+sys.path.append('../')
+
+import backend
+from conditions import *
+
+
+class TestPrepareStmts(unittest.TestCase):
+
+    def setUp(self):
+        self.stg = backend.Storage('')
+
+    def test_update(self):
+        test = self.stg._prep_update('mytable', {'uno':1, 'due':2, 'tre':3}, (eq('id', 1), like('name', '%test%')))
+
+        self.assertEqual(test.sql, 'UPDATE mytable SET uno = ?, due = ?, tre = ? WHERE 1 = 1\nAND id = ?\nAND name like ?')
+        self.assertEqual(test.bind, (1, 2, 3, 1, '%test%'))

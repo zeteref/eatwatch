@@ -15,7 +15,7 @@ def _keysvalues(dic):
     kv = namedtuple('keysvalues', ['keys', 'values'])
     return kv(tuple(x[0] for x in items), tuple(x[1] for x in items))
 
-prep = namedtuple('prep_stmt', ['sql', 'bind'])
+prep = namedtuple('prep_stmt', ['sql', 'bind', 'get_result'])
 
 class Storage(object):
 
@@ -96,7 +96,10 @@ class Storage(object):
             return func(cur)
 
 
-    def _prep_select(self, table, columns, conds):
+    def _prep_select(self, table, columns=(), conds=()):
+        if not columns:
+            columns = ('*',)
+
         sql = ['SELECT {} FROM {} WHERE 1 = 1'.format(', '.join(columns), table)]
         for cond in conds:
             sql.append('AND {} {} ?'.format(cond.lval, cond.op))
@@ -149,7 +152,7 @@ class Storage(object):
 
         bind = bind + tuple(cond.rval for cond in conds)
 
-        return prep('\n'.join(sql), bind)
+        return prep('\n'.join(sql), bind, None)
 
 
     def update(self, table, dic, conds):

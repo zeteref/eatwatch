@@ -84,4 +84,5 @@ class TestStmtExcecutionWithInMemoryEngine(unittest.TestCase):
         id_ = self.stg.insert('mytable', {'uno': 1})
 
         ret = self.stg.select('mytable')
-        print(ret)
+        self.assertEqual(len(ret), 1)
+        self.assertEqual(ret[0], {'id': 1, 'uno': 1, 'due': None, 'tre': None})

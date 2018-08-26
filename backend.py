@@ -124,7 +124,7 @@ class Storage(object):
         return prep('\n'.join(sql), bind, result)
 
 
-    def select(self, table, columns, conds):
+    def select(self, table, columns=(), conds=()):
         return self.engine.execute(*self._prep_select(table, columns, conds))
 
 

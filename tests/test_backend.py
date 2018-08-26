@@ -9,13 +9,12 @@ from conditions import *
 
 class TestPrepareStmts(unittest.TestCase):
 
-    class 
-
     def setUp(self):
-        self.stg = backend.Storage('')
+        pass
+
 
     def test_simple_update(self):
-        stg = backend.Storage()
+        stg = backend.Storage(DummyEngine())
         test = stg._prep_update('mytable', {'uno':1, 'due':2, 'tre':3}, (eq('id', 1), like('name', '%test%')))
 
         self.assertEqual(test.sql, 'UPDATE mytable SET uno = ?, due = ?, tre = ? WHERE 1 = 1\nAND id = ?\nAND name like ?')
@@ -23,13 +22,43 @@ class TestPrepareStmts(unittest.TestCase):
 
 
     def test_simple_select(self):
-        stg = backend.Storage('')
-        stg._prep_select('mytable', ('uno', 'due'), (eq('id', 1), neq('name', 'test')))
+        stg = backend.Storage(DummyEngine())
 
+        test = stg._prep_select('mytable', ('uno', 'due'), (eq('id', 1), neq('name', 'test')))
         self.assertEqual(test.sql, 'SELECT uno, due FROM mytable WHERE 1 = 1\nAND id = ?\nAND name != ?')
         self.assertEqual(test.bind, (1, 'test'))
 
-        test = self.stg._prep_select('mytable')
+        test = stg._prep_select('mytable')
         self.assertEqual(test.sql, 'SELECT * FROM mytable WHERE 1 = 1')
         self.assertEqual(test.bind, ())
 
+
+
+class DummyEngine():
+    """do not use real db engine"""
+
+    def execute(self, sql, bind=(), func=None):
+        """emulate executing statement, just return sql and bindings"""
+        return (sql, bind)
+
+
+class TestStmtsWithDummyEngine(unittest.TestCase):
+
+    def test_simple_select(self):
+        stg = backend.Storage(DummyEngine())
+
+        test = stg.select('mytable', ('uno', 'due'), (eq('id', 1), neq('name', 'test')))
+        self.assertEqual(test[0], 'SELECT uno, due FROM mytable WHERE 1 = 1\nAND id = ?\nAND name != ?')
+        self.assertEqual(test[1], (1, 'test'))
+
+        test = stg.select('mytable')
+        self.assertEqual(test[0], 'SELECT * FROM mytable WHERE 1 = 1')
+        self.assertEqual(test[1], ())
+
+
+    def test_simple_update(self):
+        stg = backend.Storage(DummyEngine())
+
+        test = stg.update('mytable', {'uno':1, 'due':2, 'tre':3}, (eq('id', 1), like('name', '%test%')))
+        self.assertEqual(test[0], 'UPDATE mytable SET uno = ?, due = ?, tre = ? WHERE 1 = 1\nAND id = ?\nAND name like ?')
+        self.assertEqual(test[1], (1, 2, 3, 1, '%test%'))

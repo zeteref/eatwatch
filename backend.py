@@ -82,29 +82,37 @@ class Storage(object):
                 c.execute(stmt)
 
 
+    def _execute(self, sql, bind=(), func=None):
+
+        if func is None:
+            def func(cursor):
+                return cursor.lastrowid
+
+        with sqlite3.connect(self.constr) as c:
+            cur = c.cursor()
+            cur.execute(sql, bind)
+
+            return func(cur)
+
+
     def select(self, table, columns, conds):
         sql = ['SELECT {} FROM {} WHERE 1 = 1'.format(', '.join(columns), table)]
         for cond in conds:
             sql.append('AND {} {} ?'.format(cond.lval, cond.op))
         bind = tuple(cond.rval for cond in conds)
 
-        with sqlite3.connect(self.constr) as c:
-            cur = c.cursor()
-            cur.execute('\n'.join(sql), bind)
-            cur_columns = [x[0] for x in cur.description]         
-    
-            return (dict(zip(cur_columns, val)) for val in cur.fetchall())
+        def result(cursor):
+            cur_columns = [x[0] for x in cursor.description]         
+            return (dict(zip(cur_columns, val)) for val in cursor.fetchall())
+
+        return self._execute('\n'.join(sql), bind, result)
 
 
     def insert(self, table, dic):
         columns, bind = _keysvalues(dic)
         sql = 'INSERT INTO {}({}) VALUES({})'.format(table, ', '.join(columns), ', '.join('?' * len(columns)))
     
-        with sqlite3.connect(self.constr) as c:
-            cur = c.cursor()
-            cur.execute(sql, bind)
-
-            return cur.lastrowid
+        return self._execute('\n'.join(sql), bind, lambda x: x.lastrowid)
 
 
     def delete(self, table, conds):
@@ -114,5 +122,18 @@ class Storage(object):
             sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
         bind = tuple(cond.rval for cond in conds)
 
-        with sqlite3.connect(self.constr) as c:
-            c.execute('\n'.join(sql), bind)
+        self._execute('\n'.join(sql), bind)
+
+
+    def update(self, table, dic, conds):
+        cols, bind = _keysvalues(dic)
+        sql = ['UPDATE {} SET {} WHERE 1 = 1'.format(
+            table, 
+            ', '.join('{} = ?'.format(x) for x in cols))]
+
+        for cond in conds:
+            sql.append('AND {} {} ?'.format(cond.lval, cond.op))
+
+        bind = bind + tuple(cond.rval for cond in conds)
+
+        return self.execute('\n'.join(sql), bind)

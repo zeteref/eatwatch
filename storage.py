@@ -2,7 +2,7 @@ import sys
 
 from pathlib import Path
 
-from backend import Storage
+from backend import Storage, SQLite3Engine
 from model import *
 from conditions import *
 from utils import extract, first
@@ -10,12 +10,8 @@ from utils import extract, first
 
 class MealStorage(Storage):
 
-    def __init__(self, constr):
-        super().__init__(constr)
-
-        if not Path(self.constr).is_file():
-            self.create_db()
-
+    def __init__(self, engine):
+        super().__init__(engine)
 
     def add_ingredient(self, ingredient):
         id_ = self.insert('ingredients', ingredient.dump(ignore=('id',)))
@@ -91,7 +87,7 @@ class MealStorage(Storage):
 def __main__():
     if len(sys.argv) > 1 and sys.argv[1] == '--create':
         dbname = sys.argv[2] if len(sys.argv) > 2 else 'example.db'
-        storage = MealStorage(dbname)
+        storage = MealStorage(SQLite3Engine(dbname))
 
         storage.drop_db()
         storage.create_db()

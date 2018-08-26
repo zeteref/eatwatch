@@ -15,6 +15,7 @@ from cherrypy.lib import auth_basic
 from cherrypy.process import plugins
 from marshmallow import Schema, fields
 
+from backend import SQLite3Engine
 from storage import MealStorage
 from model import *
 from conditions import *
@@ -22,7 +23,7 @@ from utils import first
 
 class MealsController(object):
     def __init__(self):
-        self.storage = MealStorage('e.db')
+        self.storage = MealStorage(SQLite3Engine('e.db'))
 
     # INGREDIENTS
 

@@ -1,6 +1,7 @@
 import sys
 import re
 import sqlite3
+from pathlib import Path
 from datetime import datetime
 from functools import namedtuple
 from model import *
@@ -17,10 +18,34 @@ def _keysvalues(dic):
 
 prep = namedtuple('prep_stmt', ['sql', 'bind', 'get_result'])
 
-class Storage(object):
 
+# TODO: interface?
+class SQLite3Engine():
+    """class for executing sql statements"""
     def __init__(self, constr):
         self.constr = constr
+
+        if not Path(constr).is_file():
+            self.create_db()
+
+
+    def execute(self, sql, bind=(), func=None):
+        """execute statement"""
+        if func is None:
+            def func(cursor):
+                return cursor.lastrowid
+
+        with sqlite3.connect(self.constr) as c:
+            cur = c.cursor()
+            cur.execute(sql, bind)
+
+            return func(cur)
+
+
+class Storage(object):
+
+    def __init__(self, engine):
+        self.engine = engine
 
     
     def clear_db(self):
@@ -83,19 +108,6 @@ class Storage(object):
                 c.execute(stmt)
 
 
-    def _execute(self, sql, bind=(), func=None):
-
-        if func is None:
-            def func(cursor):
-                return cursor.lastrowid
-
-        with sqlite3.connect(self.constr) as c:
-            cur = c.cursor()
-            cur.execute(sql, bind)
-
-            return func(cur)
-
-
     def _prep_select(self, table, columns=(), conds=()):
         if not columns:
             columns = ('*',)
@@ -113,7 +125,7 @@ class Storage(object):
 
 
     def select(self, table, columns, conds):
-        return self._execute(*self._prep_select(table, columns, conds))
+        return self.engine.execute(*self._prep_select(table, columns, conds))
 
 
     def _prep_insert(self, table, dic):
@@ -124,7 +136,7 @@ class Storage(object):
 
 
     def insert(self, table, dic):
-        return self._execute(*self_prep_insert(table, dic))
+        return self.engine.execute(*self_prep_insert(table, dic))
 
 
     def _prep_delete(self, table, conds):
@@ -138,7 +150,7 @@ class Storage(object):
 
 
     def delete(self, table, conds):
-        return self._execute(*self._prep_delete(table, conds))
+        return self.engine.execute(*self._prep_delete(table, conds))
 
 
     def _prep_update(self, table, dic, conds):
@@ -156,4 +168,4 @@ class Storage(object):
 
 
     def update(self, table, dic, conds):
-        return self._execute(*self._prep_update(table, dic, conds))
+        return self.engine.execute(*self._prep_update(table, dic, conds))

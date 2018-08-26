@@ -1,6 +1,6 @@
 from functools import namedtuple
 
-__all__ = ['cond', 'eq', 'lt', 'gt', 'neq', 'like']
+__all__ = ['cond', 'eq', 'lt', 'gt', 'neq', 'like', 'where']
 
 def cond(*args):
     c = namedtuple('condition', ['op', 'lval', 'rval'])
@@ -20,3 +20,6 @@ def neq(*args):
 
 def like(*args):
     return cond('like', *args)
+
+def where(*args):
+    return tuple(args)

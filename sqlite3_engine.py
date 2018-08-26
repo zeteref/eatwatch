@@ -5,7 +5,7 @@ import sqlite3
 class SQLite3Engine():
     """class for executing sql statements"""
     def __init__(self, constr):
-        self.constr = constr
+        self.conn = sqlite3.connect(constr)
 
 
     def execute(self, sql, bind=(), func=None):
@@ -14,15 +14,18 @@ class SQLite3Engine():
             def func(cursor):
                 return cursor.lastrowid
 
-        with sqlite3.connect(self.constr) as c:
-            cur = c.cursor()
-            cur.execute(sql, bind)
+        cur = self.conn.cursor()
+        cur.execute(sql, bind)
+        self.conn.commit()
 
-            return func(cur)
+        return func(cur)
 
 
     def execute_ddl(self, ddl=()):
-        with sqlite3.connect(self.constr) as c:
-            cur = c.cursor()
-            for stmt in ddl:
-                cur.execute(stmt)
+        cur = self.conn.cursor()
+        for stmt in ddl:
+            cur.execute(stmt)
+
+        self.conn.commit()
+
+

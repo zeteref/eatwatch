@@ -13,21 +13,29 @@ class MealStorage():
 
 
     def clear(self):
-        self.sqlstorage.execute_ddl(
+        self.sqlstorage.execute_ddl((
             'DELETE FROM meal_ingredients',
             'DELETE FROM ingredients',
-            'DELETE FROM meals')
+            'DELETE FROM meals'))
 
 
     def delete(self):
-        self.sqlstorageexecute_ddl(
-                'DROP TABLE meal_ingredients',
-                'DROP TABLE ingredients',
-                'DROP TABLE meals')
+        
+        ddl = [
+            'DROP TABLE meal_ingredients',
+            'DROP TABLE ingredients',
+            'DROP TABLE meals'
+        ]
+
+        for stmt in ddl:
+            try:
+                self.sqlstorage.execute_ddl((stmt,))
+            except:
+                pass
 
 
     def init(self):
-        self.sqlstorage.execute_ddl(
+        self.sqlstorage.execute_ddl((
                 """
                     CREATE TABLE ingredients (
                         id INTEGER PRIMARY KEY,
@@ -56,7 +64,7 @@ class MealStorage():
                         FOREIGN KEY(meal_id) REFERENCES meal(id)
                         FOREIGN KEY(ingredient_id) REFERENCES ingredient(id)
                     )
-                """)
+                """))
 
 
     def add_ingredient(self, ingredient):

@@ -2,10 +2,12 @@ import sys
 import json
 import unittest
 from datetime import datetime
+
+sys.path.append('../')
+
 from meta import fields, JsonObject, post_load, MarshallError, InvalidFieldsError
 from model import *
 
-sys.path.append('../')
 
 class Test(JsonObject):
     id = fields.Int()

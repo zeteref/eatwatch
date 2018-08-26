@@ -6,7 +6,8 @@ from datetime import datetime
 sys.path.append('../')
 
 from model import *
-from storage import MealStorage
+from sqlite3_engine import SQLite3Engine
+from meal_storage import MealStorage
 from conditions import *
 from utils import first, extract, today_at
 
@@ -14,18 +15,18 @@ class TestAddObjects(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.storage = MealStorage('example.db')
-        cls.storage.drop_db()
-        cls.storage.create_db()
+        cls.storage = MealStorage(SQLite3Engine('test.db'))
+        cls.storage.delete()
+        cls.storage.init()
 
 
     @classmethod
     def tearDownClass(cls):
-        cls.storage.clear_db()
+        cls.storage.clear()
 
 
     def setUp(self):
-        self.storage.clear_db()
+        self.storage.clear()
 
 
     def test_add_ingredient(self):
@@ -104,18 +105,18 @@ class TestAddNestedObjects(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.storage = MealStorage('example.db')
-        cls.storage.drop_db()
-        cls.storage.create_db()
+        cls.storage = MealStorage(SQLite3Engine('test.db'))
+        cls.storage.delete()
+        cls.storage.init()
 
 
     @classmethod
     def tearDownClass(cls):
-        cls.storage.clear_db()
+        cls.storage.clear()
 
 
     def setUp(self):
-        self.storage.clear_db()
+        self.storage.clear()
 
 
     def create_some_ingredients(self):

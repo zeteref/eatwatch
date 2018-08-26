@@ -27,7 +27,7 @@ class SQLStorage(object):
         self.engine = engine
 
     
-    def execute_ddl(ddl=()):
+    def execute_ddl(self, ddl=()):
         self.engine.execute_ddl(ddl)
 
 
@@ -40,11 +40,11 @@ class SQLStorage(object):
             sql.append('AND {} {} ?'.format(cond.lval, cond.op))
         bind = tuple(cond.rval for cond in conds)
 
-        def result(cursor):
+        def get_result(cursor):
             cur_columns = [x[0] for x in cursor.description]         
             return (dict(zip(cur_columns, val)) for val in cursor.fetchall())
 
-        return prep('\n'.join(sql), bind, result)
+        return prep('\n'.join(sql), bind, get_result)
 
 
     def select(self, table, columns=(), conds=()):
@@ -53,13 +53,13 @@ class SQLStorage(object):
 
     def _prep_insert(self, table, dic):
         columns, bind = _keysvalues(dic)
-        sql = 'INSERT INTO {}({}) VALUES({})'.format(table, ', '.join(columns), ', '.join('?' * len(columns)))
+        sql = ['INSERT INTO {}({}) VALUES({})'.format(table, ', '.join(columns), ', '.join('?' * len(columns)))]
     
         return prep('\n'.join(sql), bind, lambda x: x.lastrowid)
 
 
     def insert(self, table, dic):
-        return self.engine.execute(*self_prep_insert(table, dic))
+        return self.engine.execute(*self._prep_insert(table, dic))
 
 
     def _prep_delete(self, table, conds):
@@ -69,7 +69,7 @@ class SQLStorage(object):
             sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
         bind = tuple(cond.rval for cond in conds)
 
-        return prep('\n'.join(sql), bind)
+        return prep('\n'.join(sql), bind, None)
 
 
     def delete(self, table, conds):

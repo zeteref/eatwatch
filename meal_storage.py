@@ -77,11 +77,13 @@ class MealStorage():
         return [self.add_ingredient(x) for x in ingredients if not hasattr(x,'id')]
 
 
-    def delete_ingredient(self, *conds):
+    def delete_ingredient(self, *conds, **kwds):
+        conds = where(*conds, *tuple(eq(k, v) for k, v in kwds.items()))
         return self.sqlstorage.delete('ingredients', conds)
 
 
-    def get_ingredients(self, *conds):
+    def get_ingredients(self, *conds, **kwds):
+        conds = where(*conds, *tuple(eq(k, v) for k, v in kwds.items()))
         dics = self.sqlstorage.select('ingredients', Ingredient.columns(), conds)
         return [Ingredient.load(dic) for dic in dics]
 
@@ -101,11 +103,13 @@ class MealStorage():
         return meal
 
 
-    def delete_meal(self, *conds):
+    def delete_meal(self, *conds, **kwds):
+        conds = where(*conds, *tuple(eq(k, v) for k, v in kwds.items()))
         return self.sqlstorage.delete('meals', conds)
 
 
-    def get_meals(self, *conds):
+    def get_meals(self, *conds, **kwds):
+        conds = where(*conds, *tuple(eq(k, v) for k, v in kwds.items()))
         dics = self.sqlstorage.select('meals', Meal.columns(), conds)
         return [Meal.load(dic) for dic in dics]
 
@@ -128,10 +132,12 @@ class MealStorage():
         return meal_ingredient
 
 
-    def delete_meal_ingredient(self, *conds):
+    def delete_meal_ingredient(self, *conds, **kwds):
+        conds = where(*conds, *tuple(eq(k, v) for k, v in kwds.items()))
         return self.sqlstorage.delete('meal_ingredients', conds)
 
 
-    def get_meal_ingredients(self, *conds):
+    def get_meal_ingredients(self, *conds, **kwds):
+        conds = where(*conds, *tuple(eq(k, v) for k, v in kwds.items()))
         dics = self.sqlstorage.select('meal_ingredients', MealIngredient.columns(), conds)
         return [MealIngredient.load(dic) for dic in dics]

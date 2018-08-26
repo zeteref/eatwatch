@@ -38,7 +38,7 @@ class TestAddObjects(unittest.TestCase):
             protein=4.4,
             carbo=5.5))
 
-        test = first(self.storage.get_ingredients(eq('id', added.id)))
+        test = first(self.storage.get_ingredients(id=added.id))
 
         self.assertEqual(test.id, added.id)
         self.assertEqual(test.calories, 1.1)
@@ -50,8 +50,8 @@ class TestAddObjects(unittest.TestCase):
         none = first(self.storage.get_ingredients(neq('id', added.id)))
         self.assertIsNone(none)
 
-        self.storage.delete_ingredient(eq('id', added.id))
-        none = first(self.storage.get_ingredients(eq('id', added.id)))
+        self.storage.delete_ingredient(id=added.id)
+        none = first(self.storage.get_ingredients(id=added.id))
         self.assertIsNone(none)
 
         return test
@@ -62,15 +62,15 @@ class TestAddObjects(unittest.TestCase):
             name='obiad',
             date=datetime(2001, 12, 1, 15, 45)))
 
-        test = first(self.storage.get_meals(eq('id', added.id)))
+        test = first(self.storage.get_meals(id=added.id))
         self.assertEqual(test.name, 'obiad')
         self.assertEqual(test.date, datetime(2001, 12, 1, 15, 45))
 
         none = first(self.storage.get_meals(neq('id', added.id)))
         self.assertIsNone(none)
 
-        self.storage.delete_meal(eq('id', test.id))
-        none = first(self.storage.get_meals(eq('id', added.id)))
+        self.storage.delete_meal(id=test.id)
+        none = first(self.storage.get_meals(id=added.id))
         self.assertIsNone(none)
 
         return test
@@ -86,7 +86,7 @@ class TestAddObjects(unittest.TestCase):
             quantity=87.5
         ))
         
-        test = first(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)))
+        test = first(self.storage.get_meal_ingredients(id=meal_ingredient.id))
 
         self.assertEqual(test.ingredient_id, ingr.id)
         self.assertEqual(test.meal_id, meal.id)
@@ -95,8 +95,8 @@ class TestAddObjects(unittest.TestCase):
         none = first(self.storage.get_meal_ingredients(neq('id', meal_ingredient.id)))
         self.assertIsNone(none)
 
-        self.storage.delete_meal_ingredient(eq('id', test.id))
-        none = first(self.storage.get_meal_ingredients(eq('id', meal_ingredient.id)))
+        self.storage.delete_meal_ingredient(id=test.id)
+        none = first(self.storage.get_meal_ingredients(id=meal_ingredient.id))
         self.assertIsNone(none)
 
         return test

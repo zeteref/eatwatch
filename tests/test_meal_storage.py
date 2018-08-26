@@ -6,7 +6,7 @@ from datetime import datetime
 sys.path = ['../'] + sys.path
 
 from model import *
-from sqlite3_engine import SQLite3Engine
+from sqlite3_engine import SQLite3MemoryEngine
 from meal_storage import MealStorage
 from conditions import *
 from utils import first, today_at
@@ -15,7 +15,7 @@ class TestAddObjects(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.storage = MealStorage(SQLite3Engine(':memory:'))
+        cls.storage = MealStorage(SQLite3MemoryEngine())
         cls.storage.delete()
         cls.storage.init()
 
@@ -105,7 +105,7 @@ class TestAddNestedObjects(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.storage = MealStorage(SQLite3Engine(':memory:'))
+        cls.storage = MealStorage(SQLite3MemoryEngine())
         cls.storage.delete()
         cls.storage.init()
 

@@ -3,13 +3,13 @@ import sys
 import json
 from datetime import datetime
 
-sys.path.append('../')
+sys.path = ['../'] + sys.path
 
 from model import *
 from sqlite3_engine import SQLite3Engine
 from meal_storage import MealStorage
 from conditions import *
-from utils import first, extract, today_at
+from utils import first, today_at
 
 class TestAddObjects(unittest.TestCase):
 

@@ -95,7 +95,7 @@ class Storage(object):
             return func(cur)
 
 
-    def select(self, table, columns, conds):
+    def _prep_select(self, table, columns, conds):
         sql = ['SELECT {} FROM {} WHERE 1 = 1'.format(', '.join(columns), table)]
         for cond in conds:
             sql.append('AND {} {} ?'.format(cond.lval, cond.op))
@@ -105,27 +105,39 @@ class Storage(object):
             cur_columns = [x[0] for x in cursor.description]         
             return (dict(zip(cur_columns, val)) for val in cursor.fetchall())
 
-        return self._execute('\n'.join(sql), bind, result)
+        return ('\n'.join(sql), bind, result)
 
 
-    def insert(self, table, dic):
+    def select(self, table, columns, conds):
+        return self._execute(*self._prep_select(table, columns, conds))
+
+
+    def _prep_insert(self, table, dic):
         columns, bind = _keysvalues(dic)
         sql = 'INSERT INTO {}({}) VALUES({})'.format(table, ', '.join(columns), ', '.join('?' * len(columns)))
     
-        return self._execute('\n'.join(sql), bind, lambda x: x.lastrowid)
+        return ('\n'.join(sql), bind, lambda x: x.lastrowid)
 
 
-    def delete(self, table, conds):
+    def insert(self, table, dic):
+        return self._execute(*self_prep_insert(table, dic))
+
+
+    def _prep_delete(self, table, conds):
         sql = ['DELETE FROM {} WHERE 1 = 1'.format(table)]
 
         for cond in conds:
             sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
         bind = tuple(cond.rval for cond in conds)
 
-        self._execute('\n'.join(sql), bind)
+        return ('\n'.join(sql), bind)
 
 
-    def update(self, table, dic, conds):
+    def delete(self, table, conds):
+        return self._execute(*self._prep_delete(table, conds))
+
+
+    def _prep_update(self, table, dic, conds):
         cols, bind = _keysvalues(dic)
         sql = ['UPDATE {} SET {} WHERE 1 = 1'.format(
             table, 
@@ -136,4 +148,8 @@ class Storage(object):
 
         bind = bind + tuple(cond.rval for cond in conds)
 
-        return self.execute('\n'.join(sql), bind)
+        return ('\n'.join(sql), bind)
+
+
+    def update(self, table, dic, conds):
+        return self._execute(*self._prep_update(table, dic, conds))

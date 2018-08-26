@@ -3,7 +3,7 @@ import unittest
 
 sys.path.append('../')
 
-import backend
+from sql_storage import SQLStorage
 from conditions import *
 
 
@@ -14,7 +14,7 @@ class TestPrepareStmts(unittest.TestCase):
 
 
     def test_simple_update(self):
-        stg = backend.Storage(DummyEngine())
+        stg = SQLStorage(DummyEngine())
         test = stg._prep_update('mytable', {'uno':1, 'due':2, 'tre':3}, (eq('id', 1), like('name', '%test%')))
 
         self.assertEqual(test.sql, 'UPDATE mytable SET uno = ?, due = ?, tre = ? WHERE 1 = 1\nAND id = ?\nAND name like ?')
@@ -22,7 +22,7 @@ class TestPrepareStmts(unittest.TestCase):
 
 
     def test_simple_select(self):
-        stg = backend.Storage(DummyEngine())
+        stg = SQLStorage(DummyEngine())
 
         test = stg._prep_select('mytable', ('uno', 'due'), (eq('id', 1), neq('name', 'test')))
         self.assertEqual(test.sql, 'SELECT uno, due FROM mytable WHERE 1 = 1\nAND id = ?\nAND name != ?')
@@ -45,7 +45,7 @@ class DummyEngine():
 class TestStmtsWithDummyEngine(unittest.TestCase):
 
     def test_simple_select(self):
-        stg = backend.Storage(DummyEngine())
+        stg = SQLStorage(DummyEngine())
 
         test = stg.select('mytable', ('uno', 'due'), (eq('id', 1), neq('name', 'test')))
         self.assertEqual(test[0], 'SELECT uno, due FROM mytable WHERE 1 = 1\nAND id = ?\nAND name != ?')
@@ -57,7 +57,7 @@ class TestStmtsWithDummyEngine(unittest.TestCase):
 
 
     def test_simple_update(self):
-        stg = backend.Storage(DummyEngine())
+        stg = SQLStorage(DummyEngine())
 
         test = stg.update('mytable', {'uno':1, 'due':2, 'tre':3}, (eq('id', 1), like('name', '%test%')))
         self.assertEqual(test[0], 'UPDATE mytable SET uno = ?, due = ?, tre = ? WHERE 1 = 1\nAND id = ?\nAND name like ?')

@@ -14,7 +14,7 @@ def _keysvalues(dic):
     kv = namedtuple('keysvalues', ['keys', 'values'])
     return kv(tuple(x[0] for x in items), tuple(x[1] for x in items))
 
-prep = namedtuple('prep_stmt', ['sql', 'bind', 'get_result'])
+prep = namedtuple('prep_stmt', ['sql', 'bind'])
 
 
 class SQLStorage(object):
@@ -40,26 +40,26 @@ class SQLStorage(object):
             sql.append('AND {} {} ?'.format(cond.lval, cond.op))
         bind = tuple(cond.rval for cond in conds)
 
+        return prep('\n'.join(sql), bind)
+
+
+    def select(self, table, columns=(), conds=()):
         def get_result(cursor):
             cur_columns = [x[0] for x in cursor.description]         
             return [dict(zip(cur_columns, val)) for val in cursor.fetchall()]
 
-        return prep('\n'.join(sql), bind, get_result)
-
-
-    def select(self, table, columns=(), conds=()):
-        return self.engine.execute(*self._prep_select(table, columns, conds))
+        return self.engine.execute(*self._prep_select(table, columns, conds), get_result)
 
 
     def _prep_insert(self, table, dic):
         columns, bind = _keysvalues(dic)
         sql = ['INSERT INTO {}({}) VALUES({})'.format(table, ', '.join(columns), ', '.join('?' * len(columns)))]
     
-        return prep('\n'.join(sql), bind, lambda x: x.lastrowid)
+        return prep('\n'.join(sql), bind)
 
 
     def insert(self, table, dic):
-        return self.engine.execute(*self._prep_insert(table, dic))
+        return self.engine.execute(*self._prep_insert(table, dic), lambda cursor: cursor.lastrowid)
 
 
     def _prep_delete(self, table, conds):
@@ -69,7 +69,7 @@ class SQLStorage(object):
             sql.append('AND {} {} ?'.format(cond.lval, cond.op, cond.rval))
         bind = tuple(cond.rval for cond in conds)
 
-        return prep('\n'.join(sql), bind, None)
+        return prep('\n'.join(sql), bind)
 
 
     def delete(self, table, conds):
@@ -87,7 +87,7 @@ class SQLStorage(object):
 
         bind = bind + tuple(cond.rval for cond in conds)
 
-        return prep('\n'.join(sql), bind, None)
+        return prep('\n'.join(sql), bind)
 
 
     def update(self, table, dic, conds):

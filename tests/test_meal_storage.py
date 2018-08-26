@@ -15,7 +15,7 @@ class TestAddObjects(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.storage = MealStorage(SQLite3Engine('test.db'))
+        cls.storage = MealStorage(SQLite3Engine(':memory:'))
         cls.storage.delete()
         cls.storage.init()
 
@@ -105,7 +105,7 @@ class TestAddNestedObjects(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.storage = MealStorage(SQLite3Engine('test.db'))
+        cls.storage = MealStorage(SQLite3Engine(':memory:'))
         cls.storage.delete()
         cls.storage.init()
 

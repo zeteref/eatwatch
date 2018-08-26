@@ -57,6 +57,48 @@ class TestAddObjects(unittest.TestCase):
         return test
 
 
+    def test_update_ingredient(self):
+        added = self.storage.add_ingredient(Ingredient(
+            name='test', 
+            calories=1.1))
+
+        test = first(self.storage.get_ingredients(id=added.id))
+        self.assertEqual(test.id, added.id)
+        self.assertEqual(test.calories, 1.1)
+        self.assertEqual(test.name, 'test')
+        self.assertEqual(test.sugar, 0.0)
+        self.assertEqual(test.veg_protein, 0.0)
+        self.assertEqual(test.protein, 0.0)
+        self.assertEqual(test.carbo, 0.0)
+
+        test.protein = 1.2
+        self.storage.update_ingredient(test)
+
+        test = first(self.storage.get_ingredients(id=added.id))
+        self.assertEqual(test.id, added.id)
+        self.assertEqual(test.calories, 1.1)
+        self.assertEqual(test.name, 'test')
+        self.assertEqual(test.sugar, 0.0)
+        self.assertEqual(test.veg_protein, 0.0)
+        self.assertEqual(test.protein, 1.2)
+        self.assertEqual(test.carbo, 0.0)
+
+
+        self.storage.update_ingredient(Ingredient(id=added.id, sugar=3.3, calories=1.4))
+
+        test = first(self.storage.get_ingredients(id=added.id))
+        self.assertEqual(test.id, added.id)
+        self.assertEqual(test.calories, 1.4)
+        self.assertEqual(test.name, 'test')
+        self.assertEqual(test.sugar, 3.3)
+        self.assertEqual(test.veg_protein, 0.0)
+        self.assertEqual(test.protein, 1.2)
+        self.assertEqual(test.carbo, 0.0)
+
+
+        return test
+
+
     def test_add_meal(self):
         added = self.storage.add_meal(Meal(
             name='obiad',

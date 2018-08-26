@@ -73,6 +73,11 @@ class MealStorage():
         return ingredient
 
 
+    def update_ingredient(self, ingredient):
+        self.sqlstorage.update('ingredients', ingredient.dump(ignore=('id',)), where(eq('id', ingredient.id)))
+        return ingredient
+
+
     def add_ingredients(self, ingredients):
         return [self.add_ingredient(x) for x in ingredients if not hasattr(x,'id')]
 

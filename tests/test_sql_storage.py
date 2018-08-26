@@ -4,6 +4,7 @@ import unittest
 sys.path.append('../')
 
 from sql_storage import SQLStorage
+from sqlite3_engine import SQLite3MemoryEngine
 from conditions import *
 
 
@@ -42,7 +43,7 @@ class DummyEngine():
         return (sql, bind)
 
 
-class TestStmtsWithDummyEngine(unittest.TestCase):
+class TestStmtExcecutionWithDummyEngine(unittest.TestCase):
 
     def test_simple_select(self):
         stg = SQLStorage(DummyEngine())
@@ -62,3 +63,25 @@ class TestStmtsWithDummyEngine(unittest.TestCase):
         test = stg.update('mytable', {'uno':1, 'due':2, 'tre':3}, (eq('id', 1), like('name', '%test%')))
         self.assertEqual(test[0], 'UPDATE mytable SET uno = ?, due = ?, tre = ? WHERE 1 = 1\nAND id = ?\nAND name like ?')
         self.assertEqual(test[1], (1, 2, 3, 1, '%test%'))
+
+
+class TestStmtExcecutionWithInMemoryEngine(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.stg = SQLStorage(SQLite3MemoryEngine())
+
+
+    def setUp(self):
+        self.stg.execute_ddl(('create table mytable(id integer primary key, uno, due, tre)',))
+
+
+    def tearDown(self):
+        self.stg.execute_ddl(('drop table mytable',))
+
+
+    def test_simple_insert(self):
+        id_ = self.stg.insert('mytable', {'uno': 1})
+
+        ret = self.stg.select('mytable')
+        print(ret)

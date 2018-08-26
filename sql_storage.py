@@ -42,7 +42,7 @@ class SQLStorage(object):
 
         def get_result(cursor):
             cur_columns = [x[0] for x in cursor.description]         
-            return (dict(zip(cur_columns, val)) for val in cursor.fetchall())
+            return [dict(zip(cur_columns, val)) for val in cursor.fetchall()]
 
         return prep('\n'.join(sql), bind, get_result)
 

@@ -1,1 +1,1 @@
-- write dispatcher (look into code of RoutesDispatcher)
+- write dispatcher (look into code of RoutesDispatcher) (https://stackoverflow.com/questions/6657848/cherrypy-handle-all-request-with-one-function-or-class)

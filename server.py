@@ -39,7 +39,6 @@ class MealsController(object):
 
     # INGREDIENTS
 
-    @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')
     def get_ingredients(self):
         """
@@ -49,15 +48,12 @@ class MealsController(object):
         return [x.dump() for x in self.storage.get_ingredients()]
 
 
-    @cherrypy.tools.json_out()
-    @cherrypy.tools.json_in()
     @cherrypy.tools.accept(media='application/json')
     def add_ingredient(self):
         request_data = cherrypy.request.json
         print(request_data)
 
 
-    @cherrypy.tools.json_out()
     def get_ingredient(self, id):
         """
         Handler for /ingredients/<id> (GET)
@@ -71,7 +67,6 @@ class MealsController(object):
 
     # MEAL INGREDIENTS
 
-    @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')
     def get_meal_ingredients(self, meal_id):
         """
@@ -87,7 +82,6 @@ class MealsController(object):
 
     # MEALS
 
-    @cherrypy.tools.json_out()
     @cherrypy.tools.accept(media='application/json')
     def get_meals(self):
         """
@@ -97,7 +91,6 @@ class MealsController(object):
         return [x.dump() for x in self.storage.get_meals()]
 
 
-    @cherrypy.tools.json_out()
     def get_meal(self, id):
         """
         Handler for /meals/<name> (GET)
@@ -109,8 +102,6 @@ class MealsController(object):
         return ret.dump()
 
 
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     def add_meal(self):
         """
         Handler for /nodes (POST)
@@ -134,8 +125,6 @@ class MealsController(object):
         return meal.dump()
 
 
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     def update_node(self, name):
         """
         Handler for /nodes/<name> (PUT)
@@ -150,8 +139,6 @@ class MealsController(object):
 
         return ''
 
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     def delete_node(self, name):
         """
         Handler for /nodes/<name> (DELETE)
@@ -165,7 +152,6 @@ class MealsController(object):
         return ''
 
 
-    @cherrypy.tools.json_out()
     def search(self, q, **kwds):
         table = q
         conditions = [like(key, '%'+value+'%') for (key, value) in kwds.items() if key in Meal.columns()]
@@ -286,12 +272,10 @@ if __name__ == '__main__':
             'request.dispatch': dispatcher,
             'error_page.default': jsonify_error,
             'tools.cors.on' : True,
+            'tools.json_in.on': True,
+            'tools.json_out.on': True,
             'tools.response_headers.on': True,
             'tools.response_headers.headers': [('Content-Type', 'application/json')],
-
-            #'tools.auth_basic.on': True,
-            #'tools.auth_basic.realm': 'localhost',
-            #'tools.auth_basic.checkpassword': validate_password,
         },
     }
 

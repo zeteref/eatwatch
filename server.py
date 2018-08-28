@@ -50,9 +50,11 @@ class MealsController(object):
 
 
     @cherrypy.tools.json_out()
+    @cherrypy.tools.json_in()
     @cherrypy.tools.accept(media='application/json')
     def add_ingredient(self):
-        print(cherrypy.request.json)
+        request_data = cherrypy.request.json
+        print(request_data)
 
 
     @cherrypy.tools.json_out()
@@ -258,7 +260,7 @@ if __name__ == '__main__':
                        route='/ingredients',
                        action='add_ingredient',
                        controller=MealsController(),
-                       conditions={'method': ['PUT']})
+                       conditions={'method': ['POST']})
 
 
     dispatcher.connect(name='ingredients',

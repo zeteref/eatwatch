@@ -1,1 +1,2 @@
 - write dispatcher (look into code of RoutesDispatcher) (https://stackoverflow.com/questions/6657848/cherrypy-handle-all-request-with-one-function-or-class)
+- unit test - check out how cherrypy-cors is doing it

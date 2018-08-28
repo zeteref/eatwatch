@@ -5,7 +5,7 @@ config = {
   'global' : {
     'server.socket_host' : '127.0.0.1',
     'server.socket_port' : 8080,
-    'server.thread_pool' : 8
+    'server.thread_pool' : 8,
   }
 }
 
@@ -63,7 +63,7 @@ class App:
     '''
 
   @cherrypy.expose
-  @cherrypy.config(**{'tools.cors.on': True})
+  #@cherrypy.config(**{'tools.cors.on': True})
   @cherrypy.tools.json_in()
   @cherrypy.tools.json_out()
   def endpoint(self):
@@ -72,4 +72,7 @@ class App:
 
 
 if __name__ == '__main__':
+  cherrypy.config.update({
+    'tools.cors.on': True
+  })
   cherrypy.quickstart(App(), '/', config)

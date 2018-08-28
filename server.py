@@ -7,7 +7,6 @@ from __future__ import print_function
 import threading
 import json
 import cherrypy
-import cherrypy_cors
 
 from cherrypy.lib import auth_basic
 from cherrypy.process import plugins
@@ -17,6 +16,22 @@ from meal_storage import MealStorage
 from model import *
 from conditions import *
 from utils import first 
+
+
+def cors():
+    
+    if cherrypy.request.method in('OPTIONS', 'OPTONS'): # firefox HTTP Request Maker sends OPTONS ???
+        # preflign request 
+        # see http://www.w3.org/TR/cors/#cross-origin-request-with-preflight-0
+        cherrypy.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
+        cherrypy.response.headers['Access-Control-Allow-Headers'] = 'content-type'
+        cherrypy.response.headers['Access-Control-Allow-Origin']  = '*'
+        # tell CherryPy to avoid normal handler
+        return True
+    else:
+        cherrypy.response.headers['Access-Control-Allow-Origin'] = '*'
+
+cherrypy.tools.cors = cherrypy._cptools.HandlerTool(cors)
 
 class MealsController(object):
     def __init__(self):
@@ -32,6 +47,12 @@ class MealsController(object):
         """
 
         return [x.dump() for x in self.storage.get_ingredients()]
+
+
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.accept(media='application/json')
+    def add_ingredient(self):
+        print(cherrypy.request.json)
 
 
     @cherrypy.tools.json_out()
@@ -177,7 +198,6 @@ def validate_password(realm, username, password):
 
 
 if __name__ == '__main__':
-    cherrypy_cors.install()
 
     dispatcher = cherrypy.dispatch.RoutesDispatcher()
 
@@ -235,6 +255,13 @@ if __name__ == '__main__':
 
 
     dispatcher.connect(name='ingredients',
+                       route='/ingredients',
+                       action='add_ingredient',
+                       controller=MealsController(),
+                       conditions={'method': ['PUT']})
+
+
+    dispatcher.connect(name='ingredients',
                        route='/ingredients/{id}',
                        action='get_ingredient',
                        controller=MealsController(),
@@ -249,7 +276,6 @@ if __name__ == '__main__':
                        action='search',
                        controller=MealsController(),
                        conditions={'method': ['GET']})
-
     config = {
         'global': {
             'engine.autoreload.on': True
@@ -257,7 +283,7 @@ if __name__ == '__main__':
         '/': {
             'request.dispatch': dispatcher,
             'error_page.default': jsonify_error,
-            'cors.expose.on': True,
+            'tools.cors.on' : True,
             'tools.response_headers.on': True,
             'tools.response_headers.headers': [('Content-Type', 'application/json')],
 
@@ -278,6 +304,14 @@ if __name__ == '__main__':
     cherrypy.config.update({
         'global': {
             'engine.autoreload.on' : True
+        }
+    })
+
+
+
+
+    cherrypy.config.update({
+        '/': {
         }
     })
 

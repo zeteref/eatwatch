@@ -18,21 +18,6 @@ from conditions import *
 from utils import first 
 
 
-def cors():
-    
-    if cherrypy.request.method in('OPTIONS', 'OPTONS'): # firefox HTTP Request Maker sends OPTONS ???
-        # preflign request 
-        # see http://www.w3.org/TR/cors/#cross-origin-request-with-preflight-0
-        cherrypy.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
-        cherrypy.response.headers['Access-Control-Allow-Headers'] = 'content-type'
-        cherrypy.response.headers['Access-Control-Allow-Origin']  = '*'
-        # tell CherryPy to avoid normal handler
-        return True
-    else:
-        cherrypy.response.headers['Access-Control-Allow-Origin'] = '*'
-
-cherrypy.tools.cors = cherrypy._cptools.HandlerTool(cors)
-
 class MealsController(object):
     def __init__(self):
         self.storage = MealStorage(SQLite3Engine('e.db'))
@@ -281,26 +266,19 @@ if __name__ == '__main__':
 
     cherrypy.tree.mount(root=None, config=config)
 
-    cherrypy.config.update({
-        'engine.autoreload.on' : True,
-        # 'server.socket_host': '0.0.0.0',
-        'server.socket_port': 8080,
-    })
 
-    cherrypy.config.update({
-        'global': {
-            'engine.autoreload.on' : True
-        }
-    })
+    def cors():
+        if cherrypy.request.method in ('OPTIONS', 'OPTONS'): # firefox HTTP Request Maker sends OPTONS ???
+            # preflign request 
+            # see http://www.w3.org/TR/cors/#cross-origin-request-with-preflight-0
+            cherrypy.response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
+            cherrypy.response.headers['Access-Control-Allow-Headers'] = 'content-type'
+            cherrypy.response.headers['Access-Control-Allow-Origin']  = '*'
+            # tell CherryPy to avoid normal handler
+            return True
+        else:
+            cherrypy.response.headers['Access-Control-Allow-Origin'] = '*'
 
-
-
-
-    cherrypy.config.update({
-        '/': {
-        }
-    })
-
+    cherrypy.tools.cors = cherrypy._cptools.HandlerTool(cors)
     cherrypy.engine.start()
     cherrypy.engine.block()
-    #cherrypy.quickstart()

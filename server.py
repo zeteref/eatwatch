@@ -5,7 +5,7 @@ CherryPy-based webservice
 import json
 import cherrypy
 
-import routes
+import routeconfig
 from sqlite3_engine import SQLite3Engine
 from meal_storage import MealStorage
 from model import *
@@ -47,7 +47,7 @@ def cors():
 
 def start():
     dispatcher = cherrypy.dispatch.RoutesDispatcher()
-    routes.init(dispatcher)
+    routeconfig.init(dispatcher)
 
     config = {
         'global': {

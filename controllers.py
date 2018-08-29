@@ -25,7 +25,21 @@ class MealsController(object):
     @cherrypy.tools.accept(media='application/json')
     def add_ingredient(self):
         request_data = cherrypy.request.json
-        print(request_data)
+        ingredient = Ingredient.load(request_data)
+        ret = self.storage.add_ingredient(ingredient)
+        return ret.dump()
+
+
+    @cherrypy.tools.accept(media='application/json')
+    def update_ingredient(self):
+        request_data = cherrypy.request.json
+        ingredient = Ingredient.load(request_data)
+        ret = self.storage.update_ingredient(ingredient)
+        return ret.dump()
+
+
+    def delete_ingredient(self, id):
+        ret = self.storage.delete_ingredient(id=id)
 
 
     def get_ingredient(self, id):

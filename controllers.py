@@ -142,6 +142,9 @@ class MealsController(object):
 
     def search(self, q, **kwds):
         table = q
-        conditions = [like(key, '%'+value+'%') for (key, value) in kwds.items() if key in Meal.columns()]
-        
-        return [x.dump() for x in self.storage.get_meals(*conditions)]
+        if q == 'meals':
+            conditions = [like(key, '%'+value+'%') for (key, value) in kwds.items() if key in Meal.columns()]
+            return [x.dump() for x in self.storage.get_meals(*conditions)]
+        elif q == 'ingredients':
+            conditions = [like(key, '%'+value+'%') for (key, value) in kwds.items() if key in Ingredient.columns()]
+            return [x.dump() for x in self.storage.get_ingredients(*conditions)]
